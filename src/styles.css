@@ -1,1 +1,112 @@
 /* You can add global styles to this file, and also import other style files */
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+div.error {
+    color: white;
+    background: red;
+}
+
+div.opciones {
+    margin-top: 1.25em;
+}
+
+mat-icon.incorrecto {
+    color: red;
+}
+
+mat-icon.correcto {
+    color: green;
+}
+
+mat-radio-group.bajo {
+    margin-top: 0.5em;
+    margin-left: 10px;
+}
+
+tr.seleccionado:hover {
+    background: whitesmoke;
+}
+
+.bajo {
+    margin-top: 0.75em;
+}
+
+.borde {
+    border: 1px solid black;
+}
+
+.botonera {
+    margin-top: 0.75em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    max-width: 100%;
+    margin-left: 10px;
+    margin-right: 10px;
+    padding: 5px;
+}
+
+.iconos {
+    width: 40px;
+}
+
+.radios {
+    padding-top: 0.75em;
+    padding-left: 1em;
+}
+
+.mat-radio-button~.mat-radio-button {
+    margin-left: 30px;
+}
+
+.mat-form-field {
+    margin-left: 8px;
+}
+
+.mw20 {
+    margin: 8px;
+    width: 20%;
+}
+
+.mw30 {
+    margin: 8px;
+    width: 30%;
+}
+
+.mw60 {
+    margin: 8px;
+    width: 60%;
+}
+
+.w100 {
+    width: 100%;
+    display: block;
+}
+
+.fondoLila {
+    background-color: #4a148c;
+}
+
+.fondoRojo {
+    background-color: #d50000;
+}
+
+.textoRojo {
+    color: #F44336;
+}
+
+.textoNegro {
+    color: #000000;
+}

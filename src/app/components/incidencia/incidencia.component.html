@@ -1,0 +1,23 @@
+<h3>Incidencia Component</h3>
+<div class="container">
+    <div fxLayout="column" fxFlex="70">
+
+        <div fxLayout="row">
+            <div fxLayout="column" fxFlex="50" class="borde">
+                <app-numero (enviarInformacionEvent)="informacionRecibida($event)"></app-numero>
+            </div>
+            <div fxLayout="column" fxFlex="50" class="borde">
+                <!-- Vacío-->
+            </div>
+        </div>
+
+        <div fxLayout="row">
+            <div fxLayout="column" fxFlex="50" class="borde">
+                <app-datos></app-datos>
+            </div>
+            <div fxLayout="column" fxFlex="50" class="borde">
+                <app-diario></app-diario>
+            </div>
+        </div>
+    </div>
+</div>

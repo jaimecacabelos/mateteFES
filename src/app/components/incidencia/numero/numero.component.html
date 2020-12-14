@@ -1,0 +1,31 @@
+<small> Numero Component </small>
+<div class="container">
+    <form [formGroup]="numeroForm" autocomplete="off">
+        <div fxLayout="row">
+            <div fxLayout="column" fxFlex="40">
+                <label id="tipoIncidencia">Tipo Incidencia</label>
+                <mat-radio-group [formControl]="tipo" name="tipoIncidencia" class="bajo">
+                    <mat-radio-button value="RMY">Remedy</mat-radio-button>
+                    <mat-radio-button value="SPT">SOPIT</mat-radio-button>
+                </mat-radio-group>
+            </div>
+            <div fxLayout="column" fxFlex="40">
+                <div fxLayout="row" fxLayoutGap="10px">
+                    <div fxLayout="column" fxFlex="60">
+                        <mat-form-field appearance="standard">
+                            <mat-label>Número de Incidencia</mat-label>
+                            <input matInput type="text" (keyup.enter)="onEnter()" [formControl]="numero">
+                        </mat-form-field>
+                    </div>
+                    <div fxLayout="column" fxFlex="40" class="bajo">
+                        <button mat-flat-button [ngClass]="botonIncidencia.clases">
+              {{botonIncidencia.texto}}
+            </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>

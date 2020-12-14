@@ -1,0 +1,40 @@
+.dispositivo {
+    margin-top: 1 em;
+    align-self: baseline;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+table {
+    width: 80%;
+    margin-left: 1rem;
+    /* margin: 1rem auto; */
+}
+
+.mat-column-equipo {
+    white-space: unset !important;
+    width: 30% !important;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+}
+
+.mat-column-ns {
+    white-space: unset !important;
+    width: 40% !important;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+}
+
+.mat-column-modelo {
+    white-space: unset !important;
+    width: 20% !important;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+}

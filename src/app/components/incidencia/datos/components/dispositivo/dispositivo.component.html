@@ -1,0 +1,36 @@
+<h2> Buscador de Dispositivos </h2>
+<div class="container">
+
+    <form ngNativeValidate class="crear" [formGroup]="dispositivoForm" autocomplete="off">
+
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <div fxlayout="column" fxFlex="30">
+                <mat-form-field [appearance]="estiloCelda">
+                    <mat-label>Equipo</mat-label>
+                    <input matInput (keydown.tab)="tramitarEquipo($event)" type="text" tabindex="tabOrder + 1" [formControl]="equipo" [ngClass]="equipoInfo.colorTexto" [matTooltip]="equipoInfo.textoTT" matTooltipPosition="above" [matTooltipClass]="equipoInfo.claseTT">
+                </mat-form-field>
+            </div>
+
+            <div fxlayout="column" fxFlex="30">
+                <mat-form-field [appearance]="estiloCelda">
+                    <mat-label>Número de Serie</mat-label>
+                    <input matInput (keydown.tab)="tramitarNumSerie($event)" type="text" tabindex="tabOrder + 2" [formControl]="numSerie" [ngClass]="equipoInfo.colorTexto">
+                </mat-form-field>
+            </div>
+
+            <div fxlayout="column" fxFlex="30">
+                <mat-form-field [appearance]="estiloCelda">
+                    <mat-label>Modelo</mat-label>
+                    <input matInput (keydown.tab)="tramitarModelo($event)" type="text" tabindex="tabOrder + 3" [formControl]="modelo" [ngClass]="modeloInfo.colorTexto" [matTooltip]="modeloInfo.textoTT" matTooltipPosition="above" [matTooltipClass]="modeloInfo.claseTT">
+                </mat-form-field>
+            </div>
+
+        </div>
+        <div fxLayout="row" class="botonera">
+            <button mat-raised-button color="primary" type="button" (click)="cerrar()" tabindex="tabOrder + 5">
+               Cerrar
+            </button>
+        </div>
+    </form>
+</div>

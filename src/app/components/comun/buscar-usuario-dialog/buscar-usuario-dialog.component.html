@@ -1,0 +1,83 @@
+<h1 mat-dialog-title>
+    Buscador de Usuarios</h1>
+<div class="container">
+    <form ngNativeValidate [formGroup]="buscarUsuarioForm" (keydown.enter)="$event.preventDefault()" (submit)="realizarConsulta()">
+        <mat-form-field [appearance]="estiloCelda " *ngIf="!this.data.principal">
+            <mat-label>Principal</mat-label>
+            <mat-select [formControl]="usuarioPrincipal">
+                <mat-option *ngFor="let principal of principalMaestro" (click)="poblarGrupos(principal.nombre)" [value]="principal.nombre">
+                    {{principal.nombre}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field [appearance]="estiloCelda">
+            <mat-label>Categoría</mat-label>
+            <mat-select [formControl]="usuarioGrupo">
+                <mat-option *ngFor="let grupo of grupoMaestro" [value]="grupo.codigo">
+                    {{grupo.nombre}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="standard">
+            <mat-label>Apellidos</mat-label>
+            <input matInput type="text" (keyup.enter)="apellidosEnter($event)" [formControl]="usuarioApellidos">
+            <mat-error *ngIf="buscarUsuarioForm.get('usuarioApellidos').hasError('minlength')">
+                Mínimo 3 caracteres
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="standard">
+            <mat-label>Nombre</mat-label>
+            <input matInput type="text" (keyup.enter)="nombreEnter($event)" [formControl]="usuarioNombre">
+            <mat-error *ngIf="buscarUsuarioForm.get('usuarioNombre').hasError('minlength')">
+                Mínimo 3 caracteres
+            </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="standard">
+            <mat-label>clave</mat-label>
+            <input matInput type="text" (keyup.enter)="claveEnter($event)" [formControl]="usuarioClave">
+            <mat-error *ngIf="buscarUsuarioForm.get('usuarioClave').hasError('minlength')">
+                Mínimo 7 caracteres
+            </mat-error>
+            <mat-error *ngIf="buscarUsuarioForm.get('usuarioClave').hasError('maxlength')">
+                Máximo 8 caracteres
+            </mat-error>
+        </mat-form-field>
+
+        <div class="container error" *ngIf="errorUsuario"> No existen usuarios con esos parámetros </div>
+
+        <div class="container" *ngIf="usuariosTabla" align="center">
+            <table mat-table [dataSource]="usuariosTabla">
+
+                <ng-container matColumnDef="apellidos">
+                    <th mat-header-cell *matHeaderCellDef class="mw30"> Apellidos </th>
+                    <td mat-cell *matCellDef="let usuario" class="mw30"> {{usuario.apellidos}} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="nombre">
+                    <th mat-header-cell *matHeaderCellDef class="mw30"> Nombre </th>
+                    <td mat-cell *matCellDef="let usuario" class="mw30"> {{usuario.nombre}} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="usuario">
+                    <th mat-header-cell *matHeaderCellDef class="mw20"> Usuario </th>
+                    <td mat-cell *matCellDef="let usuario " class="mw20"> {{ usuario.usuario }} </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="mostrarColumnas; sticky: true "></tr>
+                <tr mat-row *matRowDef="let row; columns: mostrarColumnas;let i=i ndex " class="seleccionado " (click)="valorPulsado(row) "></tr>
+            </table>
+        </div>
+
+
+        <mat-dialog-actions align="center">
+            <button mat-raised-button color="primary" (click)="finalizar() ">Aceptar</button>
+            <button mat-raised-button color="accent" (click)="nueva() ">Nueva</button>
+        </mat-dialog-actions>
+
+    </form>
+
+</div>

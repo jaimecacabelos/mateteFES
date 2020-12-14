@@ -1,0 +1,20 @@
+button.incidencia {
+    color: white;
+    cursor: default;
+}
+
+button.incidencia.nueva {
+    background-color: steelblue;
+}
+
+button.incidencia.abierta {
+    background-color: firebrick;
+}
+
+button.incidencia.curso {
+    background-color: darkorange;
+}
+
+button.incidencia.cerrada {
+    background-color: forestgreen;
+}

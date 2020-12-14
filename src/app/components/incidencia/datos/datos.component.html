@@ -1,0 +1,253 @@
+<small> Numero Component </small>
+
+<div class="container">
+    <form ngNativeValidate class="crear" [formGroup]="datosForm" autocomplete="off">
+
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <div fxLayout="column" fxFlex="30">
+                <div fxLayout="row" class="bajo">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field>
+                            <mat-label>Fecha Alta</mat-label>
+                            <input matInput [matDatepicker]="miCalendario" [formControl]="fechaAlta">
+                            <mat-datepicker-toggle matSuffix [for]="miCalendario"></mat-datepicker-toggle>
+                            <mat-datepicker #miCalendario></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            <div fxLayout="column" fxFlex="30">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field [appearance]="estiloCelda">
+                            <mat-label>Clave de Centro</mat-label>
+                            <input matInput type="text" (keyup.enter)="onEnterCentro($event)" [formControl]="codCentro" tabindex="tabOrder + 2">
+                            <mat-icon matSuffix *ngIf="verIcono.codCentro && tipoIcono.codCentro" class="correcto">
+                                check_circle_outline
+                            </mat-icon>
+                            <mat-icon matSuffix *ngIf="verIcono.codCentro && !tipoIcono.codCentro" class="incorrecto">error_outline
+                            </mat-icon>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            <div fxlayout="column" fxFlex="30">
+                <div fxLayout="row" class="botonera" fxLayoutGap="10px">
+                    <!-- Botón Añadir Dispositivo -->
+                    <button mat-mini-fab color="primary" type="button" (click)="addDispositivo()">
+                       <mat-icon>add_to_queue</mat-icon>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <table mat-table #dispositivoTabla [dataSource]="dispositivoData">
+                <ng-container matColumnDef="equipo">
+                    <th mat-header-cell *matHeaderCellDef class="mat-column-equipo"> Equipo </th>
+                    <td mat-cell *matCellDef="let registro" class="mat-column-equipo"> {{registro.equipo}} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="numeroSerie">
+                    <th mat-header-cell *matHeaderCellDef class="mat-column-ns"> Número de Serie </th>
+                    <td mat-cell *matCellDef="let registro" class="mat-column-ns"> {{registro.numeroSerie}} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="modelo">
+                    <th mat-header-cell *matHeaderCellDef class="mat-column-modelo"> Modelo </th>
+                    <td mat-cell *matCellDef="let registro" class="mat-column-modelo"> {{registro.modelo}} </td>
+                </ng-container>
+
+
+                <tr mat-header-row *matHeaderRowDef="mostrarColumnasDispositivo; sticky: true "></tr>
+                <tr mat-row *matRowDef="let row; columns: mostrarColumnasDispositivo;let i=index " class="seleccionado " (click)="valorPulsadoDispositivo(row)"></tr>
+            </table>
+
+        </div>
+
+
+
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <div fxlayout="column" fxFlex="30">
+                <mat-form-field [appearance]="estiloCelda">
+                    <mat-label>Equipo</mat-label>
+                    <input matInput type="text" [formControl]="equipo" [errorStateMatcher]="matcher" tabindex="tabOrder + 3">
+
+                    <mat-error *ngIf="datosForm.get('equipo').hasError('minlength')">
+                        Mínimo 10 caracteres
+                    </mat-error>
+
+                    <mat-error *ngIf="datosForm.get('equipo').hasError('maxlength')">
+                        Máximo 11 caracteres
+                    </mat-error>
+
+                </mat-form-field>
+            </div>
+
+            <div fxLayout="column" fxFlex="30">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field [appearance]="estiloCelda">
+                            <mat-label>Número de Serie</mat-label>
+                            <input matInput type="text" [formControl]="numeroSerie" tabindex="tabOrder + 4">
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            <div fxlayout="column" fxFlex="30">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field [appearance]="estiloCelda">
+                            <mat-label>Modelo</mat-label>
+                            <input matInput type="text" (keyup.enter)="onEnterModelo($event)" [formControl]="modelo" [errorStateMatcher]="matcher" tabindex="tabOrder + 5">
+                            <mat-icon matSuffix *ngIf="verIcono.modelo && tipoIcono.modelo" class="correcto">check_circle_outline
+                            </mat-icon>
+                            <mat-icon matSuffix *ngIf="verIcono.modelo && !tipoIcono.modelo" class="incorrecto">error_outline
+                            </mat-icon>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <div fxlayout="column" fxFlex="100">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field [appearance]="estiloCelda" class="areaTexto">
+                            <mat-label>Descripción</mat-label>
+                            <textarea matInput cdkTextareaAutosize #autosize="cdkTextareaAutosize" cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" [formControl]="descripcion" [errorStateMatcher]="matcher" tabindex="tabOrder + 6" placeholder="Introduce descripción">
+                            </textarea>
+                            <mat-error *ngIf="datosForm.get('descripcion').hasError('required')">
+                                Campo Obligatorio
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <div fxLayout="column" fxFlex="30">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <app-buscar-usuario (enviarUsuarioEvent)="usuarioRecibido($event)"></app-buscar-usuario>
+                    </div>
+                </div>
+            </div>
+
+            <div fxLayout="column" fxFlex="60">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field [appearance]="estiloCelda">
+                            <mat-label>Tipificación Inicial</mat-label>
+                            <mat-select [formControl]="categoriaInicial" tabindex="tabOrder + 10">
+                                <mat-option *ngFor="let categoria of categoriasInicial" [value]="categoria.codigo">
+                                    ({{categoria.codigo}}) {{categoria.nombre}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error *ngIf="datosForm.get('categoriaInicial').hasError('required')">
+                                Campo Obligatorio
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            <div fxlayout="column" fxFlex="10">
+                <!-- Contenedor Vacío -->
+            </div>
+        </div>
+
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <div fxlayout="column" fxFlex="100">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field [appearance]="estiloCelda" class="areaTexto">
+                            <mat-label>Resolución</mat-label>
+                            <textarea matInput cdkTextareaAutosize #autosize="cdkTextareaAutosize" cdkAutosizeMinRows="1" cdkAutosizeMaxRows="5" [formControl]="resolucion" [errorStateMatcher]="matcher" tabindex="tabOrder + 11" placeholder="Introduce Resolución">
+                            </textarea>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <div fxLayout="column" fxFlex="30">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <app-buscar-usuario (enviarUsuarioEvent)="usuarioFin($event)" tabindex="tabOrder + 12"></app-buscar-usuario>
+
+                    </div>
+                </div>
+            </div>
+
+            <div fxLayout="column" fxFlex="60">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field [appearance]="estiloCelda">
+                            <mat-label>Tipificación Final</mat-label>
+                            <mat-select [formControl]="categoriaFinal" tabindex="tabOrder + 13">
+                                <mat-option *ngFor="let categoria of categoriasFinal" [value]="categoria.codigo">
+                                    ({{categoria.codigo}}) {{categoria.nombre}}
+                                </mat-option>
+                            </mat-select>
+                            <mat-error *ngIf="datosForm.get('categoriaFinal').hasError('required')">
+                                Campo Obligatorio
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            <div fxlayout="column" fxFlex="10">
+                <!-- Contenedor Vacío -->
+            </div>
+        </div>
+
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <div fxLayout="column" fxFlex="30">
+                <div fxLayout="row" class="bajo">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field>
+                            <mat-label>Fecha Cierre</mat-label>
+                            <input matInput [matDatepicker]="miCalendarioCierre" [formControl]="fechaCierre">
+                            <mat-datepicker-toggle matSuffix [for]="miCalendarioCierre"></mat-datepicker-toggle>
+                            <mat-datepicker #miCalendarioCierre></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            <div fxLayout="column" fxFlex="30">
+                <!-- Celda Vacía -->
+            </div>
+
+            <div fxLayout="column" fxFlex="30">
+                <!-- Celda Vacía -->
+            </div>
+        </div>
+
+        <div fxLayout="row" class="botonera">
+            <button mat-raised-button color="primary" type="button" tabindex="tabOrder + 14">
+               Acción
+            </button>
+        </div>
+
+    </form>
+</div>

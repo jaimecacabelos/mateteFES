@@ -1,0 +1,46 @@
+<h1 mat-dialog-title>Buscador de Modelo de Dispositivo</h1>
+
+<div class="container">
+    <form ngNativeValidate [formGroup]="buscarModeloForm">
+
+
+        <mat-checkbox (change)="cambioElectromedicina()" [formControl]="electromedicina">
+            Electromedicina
+        </mat-checkbox>
+
+        <mat-form-field [appearance]="estiloCelda">
+            <mat-label>Categorías</mat-label>
+            <mat-select [formControl]="categoria">
+                <mat-option *ngFor="let categoria of categoriasMaestro" (click)="poblarFabricantes(categoria.prefijo)" [value]="categoria.prefijo">
+                    {{categoria.nombre}} ({{categoria.prefijo}})
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field [appearance]="estiloCelda">
+            <mat-label>Fabricantes</mat-label>
+            <mat-select [formControl]="fabricante">
+                <mat-option *ngFor="let fabricante of fabricantesMaestro" (click)="poblarModelos(fabricante.fabricante)" [value]="fabricante.fabricante">
+                    {{fabricante.fabricante}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field [appearance]="estiloCelda">
+            <mat-label>Modelos</mat-label>
+            <mat-select [formControl]="modelo">
+                <mat-option *ngFor="let modelo of modelosMaestro" (click)="seleccionaModelo(modelo)" [value]="modelo.nombre">
+                    {{modelo.modelo}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-dialog-actions align="center">
+            <button mat-raised-button color="primary" (click)="finalizar()" cdkFocusInitial>Aceptar</button>
+        </mat-dialog-actions>
+
+    </form>
+
+
+
+</div>

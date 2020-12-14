@@ -1,0 +1,43 @@
+table {
+    width: 100%;
+}
+
+.mat-column-fecha {
+    white-space: unset !important;
+    flex: 0 0 20% !important;
+    width: 20% !important;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+}
+
+.mat-column-usuario {
+    white-space: unset !important;
+    flex: 0 0 20% !important;
+    width: 20% !important;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+}
+
+.mat-column-texto {
+    white-space: unset !important;
+    flex: 0 0 40% !important;
+    width: 40% !important;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+}
+
+.mat-column-tarea {
+    white-space: unset !important;
+    flex: 0 0 20% !important;
+    width: 20% !important;
+    -ms-hyphens: auto;
+    -moz-hyphens: auto;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+}

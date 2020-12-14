@@ -1,0 +1,17 @@
+.usuarioTT {
+    background-color: #4a148c;
+}
+
+.usuarioErrorTT {
+    /* your own custom styles here */
+    /* e.g. */
+    background-color: #d50000;
+}
+
+.textoRojo {
+    color: #F44336;
+}
+
+.textoNegro {
+    color: #000000;
+}

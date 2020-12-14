@@ -1,0 +1,109 @@
+<small> Diario Component </small>
+
+<div class="container">
+    <!--<form ngNativeValidate class="crear" [formGroup]="diarioForm" (keydown.enter)="$event.preventDefault()" (ngSubmit)="envio()" autocomplete="off">-->
+    <form ngNativeValidate class="crear" [formGroup]="diarioForm" (ngSubmit)="envio()" autocomplete="off">
+        <div fxLayout="row" fxLayoutGap="10px">
+
+            <div fxLayout="column" fxFlex="20">
+                <div fxLayout="row" class="bajo">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field>
+                            <mat-label>Fecha</mat-label>
+                            <input matInput [matDatepicker]="miCalendario" [formControl]="fecha" tabindex="tabOrder + 1">
+                            <mat-datepicker-toggle matSuffix [for]="miCalendario"></mat-datepicker-toggle>
+                            <mat-datepicker #miCalendario></mat-datepicker>
+
+                            <mat-error *ngIf="diarioForm.get('fecha').hasError('required')">
+                                Campo Obligatorio
+                            </mat-error>
+
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            <div fxLayout="column" fxFlex="15">
+
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <app-buscar-usuario (enviarUsuarioEvent)="usuarioRecibido($event)"></app-buscar-usuario>
+                    </div>
+                </div>
+
+            </div>
+
+            <div fxLayout="column" fxFlex="40">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field [appearance]="estiloCelda">
+                            <mat-label>Texto</mat-label>
+                            <input matInput type="text" [formControl]="texto" tabindex="tabOrder + 3">
+
+                            <mat-error *ngIf="diarioForm.get('texto').hasError('required')">
+                                Campo Obligatorio
+                            </mat-error>
+
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            <div fxLayout="column" fxFlex="15">
+                <div fxLayout="row">
+                    <div fxLayout="column" fxFlex="90">
+                        <mat-form-field [appearance]="estiloCelda">
+                            <mat-label>Tarea</mat-label>
+                            <input matInput type="text" [formControl]="tarea" tabindex="tabOrder + 4">
+
+                            <mat-error *ngIf="diarioForm.get('tarea').hasError('required')">
+                                Campo Obligatorio
+                            </mat-error>
+
+                        </mat-form-field>
+                    </div>
+                </div>
+            </div>
+
+            <div fxLayout="column" fxFlex="10">
+                <div fxLayout="row" class="opciones">
+                    <div fxLayout="column" fxFlex="90">
+                        <button mat-icon-button color="primary" aria-label="Añadir registro" (click)="addRegistro()">
+                          <mat-icon>add_circle</mat-icon>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="container" *ngIf="diarioData && diarioData.length" align="center">
+
+        <table mat-table #diariotabla [dataSource]="diarioData">
+
+            <ng-container matColumnDef="fecha">
+                <th mat-header-cell *matHeaderCellDef class="mat-column-fecha"> Fecha </th>
+                <td mat-cell *matCellDef="let registro" class="mat-column-fecha"> {{registro.fecha}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="usuario">
+                <th mat-header-cell *matHeaderCellDef class="mat-column-usuario"> Usuario </th>
+                <td mat-cell *matCellDef="let registro" class="mat-column-usuario"> {{registro.usuario}} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="texto">
+                <th mat-header-cell *matHeaderCellDef class="mat-column-texto"> Texto </th>
+                <td mat-cell *matCellDef="let registro" class="mat-column-texto"> {{ registro.texto }} </td>
+            </ng-container>
+
+            <ng-container matColumnDef="tarea">
+                <th mat-header-cell *matHeaderCellDef> Tarea </th>
+                <td mat-cell *matCellDef="let registro"> {{ registro.tarea }} </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="mostrarColumnas; sticky: true "></tr>
+            <tr mat-row *matRowDef="let row; columns: mostrarColumnas;let i=index " class="seleccionado " (click)="valorPulsado(row)"></tr>
+        </table>
+    </div>
+
+</div>
