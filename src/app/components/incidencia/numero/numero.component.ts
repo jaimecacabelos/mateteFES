@@ -13,9 +13,9 @@ import { IncidenciasDialogComponent } from '../incidencias-dialog/incidencias-di
 import { Subscription } from 'rxjs';
 
 // ************************************************************************************************
-// *********************************** Modelos ****************************************************
+// *********************************** Tipado *****************************************************
 // ************************************************************************************************
-import { Incidencia } from './../../../models/incidencia.model';
+import { Incidencia } from './../../../Tipado/Incidencias';
 
 // ************************************************************************************************
 // *********************************** Servicios **************************************************
@@ -23,6 +23,8 @@ import { Incidencia } from './../../../models/incidencia.model';
 import { LoggerService } from '../../../services/logger.service';
 import { IncidenciaService } from './../../../services/incidencia.service';
 import { IncidenciaComService } from './../../../services/comunicacion/incidencia-com.service';
+import { IncidenciaObservableService } from './../../../services/incidencia-observable.service';
+
 
 @Component({
   selector: 'app-numero',
@@ -33,8 +35,12 @@ export class NumeroComponent implements OnInit, OnDestroy {
   // @Output() enviarInformacionEvent = new EventEmitter();
   incidenciaSubscripcion: Subscription;
 
+  // incidencia: Incidencia;
+  // incidencias: Incidencia[];
+
   incidencia: Incidencia;
   incidencias: Incidencia[];
+
   incidenciaNumero: number;
 
   numeroForm: FormGroup;
@@ -50,7 +56,7 @@ export class NumeroComponent implements OnInit, OnDestroy {
 
   constructor(
     private fb: FormBuilder,
-    private incidenciaCom$: IncidenciaComService,
+    private _incidenciaObservable$: IncidenciaObservableService,
     private incidencia$: IncidenciaService,
     private logger$: LoggerService,
     private incidenciasDialog: MatDialog
@@ -60,6 +66,7 @@ export class NumeroComponent implements OnInit, OnDestroy {
       'Iniciamos Componente -> Constructor'
     );
     this.construirFormulario();
+    /*
     this.incidencia = new Incidencia(
       null,
       null,
@@ -72,6 +79,7 @@ export class NumeroComponent implements OnInit, OnDestroy {
       null,
       null
     );
+    */
   }
 
   ngOnInit(): void {
@@ -79,12 +87,12 @@ export class NumeroComponent implements OnInit, OnDestroy {
       'numeroComponent',
       'Iniciamos la Subscripcion a Incidencias'
     );
-    this.incidenciaSubscripcion = this.incidenciaCom$.incidenciaObservable$.subscribe(
-      (res) => {
-        if (res) {
+    this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
+      (respuesta) => {
+        if (respuesta) {
           this.logger$.enviarMensajeConsola(
             'numeroComponent',
-            `incidenciaSubscripcion -> ${JSON.stringify(res)}`
+            `incidenciaSubscripcion -> ${JSON.stringify(respuesta)}`
           );
           // perform your other action from here
         }
@@ -113,50 +121,47 @@ export class NumeroComponent implements OnInit, OnDestroy {
       'Hemos entrado en onEnter'
     );
 
-    let incidenciaTemporal: Incidencia = new Incidencia(
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    );
+    this.incidencia = {
+      tipo: this.numeroForm.get('tipo').value,
+      numero: this.numeroForm.get('numero').value,
+      fecha: null,
+      codCentro: null,
+      dispositivo: null,
+      descripcion: null,
+      categoria: null,
+      diario: null,
+      resolucion: null,
+      estado: 'NVA',
 
-    incidenciaTemporal.tipo = this.numeroForm.get('tipo').value;
-    incidenciaTemporal.numero = this.numeroForm.get('numero').value;
-    incidenciaTemporal.estado = 'NVA';
+    }
 
     this.logger$.enviarMensajeConsola(
       'NumeroComponent',
-      `Valor de incidenciaTemporal.tipo -> ${incidenciaTemporal.tipo}`
+      `Valor de incidenciaTemporal.tipo -> ${this.incidencia.tipo}`
     );
 
-    if (incidenciaTemporal.numero && incidenciaTemporal.numero > 0) {
+    if (this.incidencia.numero && this.incidencia.numero > 0) {
       this.logger$.enviarMensajeConsola(
         'NumeroComponent',
         'Vamos a llamar al servicio incidencia$'
       );
       this.logger$.enviarMensajeConsola(
         'NumeroComponent',
-        `Cadena a enviar: \incidencia\\${incidenciaTemporal.tipo}\\${incidenciaTemporal.numero}`
+        `Cadena a enviar: \incidencia\\${this.incidencia.tipo}\\${this.incidencia.numero}`
       );
 
       this.incidencia$
-        .buscarIncidencia(incidenciaTemporal)
+        .buscarIncidencia(this.incidencia)
         .subscribe((respuesta: any) => {
           if (respuesta.cuenta === 0) {
-            this.incidenciaCom$.notificaIncidencia(incidenciaTemporal);
-            this.gestionBotonIncidencia(incidenciaTemporal);
+            this._incidenciaObservable$.notificaIncidencia(this.incidencia);
+            this.gestionBotonIncidencia(this.incidencia);
             return;
           }
           if (respuesta.cuenta === 1) {
-            incidenciaTemporal = respuesta.incidencias[0];
-            this.incidenciaCom$.notificaIncidencia(incidenciaTemporal);
-            this.gestionBotonIncidencia(incidenciaTemporal);
+            this.incidencia = respuesta.incidencias[0];
+            this._incidenciaObservable$.notificaIncidencia(this.incidencia);
+            this.gestionBotonIncidencia(this.incidencia);
             return;
           }
 
@@ -189,7 +194,7 @@ export class NumeroComponent implements OnInit, OnDestroy {
       if (datos) {
         this.numeroForm.get('numero').setValue(datos.numero);
         this.gestionBotonIncidencia(datos);
-        this.incidenciaCom$.notificaIncidencia(datos);
+        this._incidenciaObservable$.notificaIncidencia(datos);
         return;
       }
     });
@@ -240,6 +245,6 @@ export class NumeroComponent implements OnInit, OnDestroy {
     );
 
     // this.enviarInformacionEvent.emit(incidencia);
-    this.incidenciaCom$.notificaIncidencia(incidencia);
+    this._incidenciaObservable$.notificaIncidencia(incidencia);
   }
 }

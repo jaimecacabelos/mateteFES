@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 
-import { Incidencia } from './../../models/incidencia.model';
+import { Incidencia } from './../../Tipado/Incidencias';
 
 import { LoggerService } from './../logger.service';
 
