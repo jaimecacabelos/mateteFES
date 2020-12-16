@@ -3,6 +3,7 @@
 // ************************************************************************************************
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
+import { map } from 'rxjs/operators';
 
 // ************************************************************************************************
 // *********************************** Tipado *****************************************************
@@ -19,12 +20,20 @@ import { URL_SERVICIOS } from '../config/config';
 // *********************************** Variables Globales *****************************************
 // ************************************************************************************************
 
+interface Respuesta {
+  correcto: boolean;
+  cuenta: number;
+  mensaje: string;
+  incidencias: Incidencia[];
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class IncidenciaService {
   constructor(public http: HttpClient, private logger$: LoggerService) {}
+
+  respuesta: Respuesta;
 
   buscarIncidencia(incidencia: Incidencia) {
     this.logger$.enviarMensajeConsola('_incidenciaService', 'buscarIncidencia');
@@ -35,7 +44,11 @@ export class IncidenciaService {
       '_incidenciaService',
       `Cadena de búsqueda: ${url}`
     );
-    return this.http.get(url);
+    return this.http.get<Respuesta>(url).pipe(
+      map ( respuesta => {
+        return respuesta.incidencias;
+      })
+    );
   }
 
   recuperaCategorizacion(tipo: string, dispositivo: string) {

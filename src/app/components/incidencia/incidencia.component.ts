@@ -5,15 +5,16 @@ import { Component, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 
 // ************************************************************************************************
-// *********************************** Modelos ****************************************************
+// *********************************** Tipado *****************************************************
 // ************************************************************************************************
-import { Incidencia } from './../../models/incidencia.model';
+import { Incidencia } from './../../Tipado/Incidencias';
 
 // ************************************************************************************************
 // *********************************** Servicios **************************************************
 // ************************************************************************************************
 import { LoggerService } from './../../services/logger.service';
 import { IncidenciaComService } from './../../services/comunicacion/incidencia-com.service';
+import { IncidenciaObservableService } from './../../services/incidencia-observable.service';
 
 @Component({
   selector: 'app-incidencia',
@@ -32,7 +33,7 @@ export class IncidenciaComponent implements OnInit {
   verCrearComponent: boolean;
 
   constructor(private logger$: LoggerService,
-              private incidenciaCom$: IncidenciaComService) {
+              private _incidenciaObservable$: IncidenciaObservableService) {
     this.logger$.enviarMensajeConsola(
       'IncidenciasComponent',
       'Se ha creado el componente incidencias'
@@ -45,19 +46,18 @@ export class IncidenciaComponent implements OnInit {
       'IncidenciaComponent',
       'Iniciamos la Subscripcion a Incidencias'
     );
-    this.incidenciaSubscripcion = this.incidenciaCom$.incidenciaObservable$.subscribe((res) => {
-        if (res) {
+    this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
+      (respuesta: Incidencia) => {
+        if (respuesta) {
           this.logger$.enviarMensajeConsola(
             'incidenciaComponent',
-            `incidenciaSubscripcion -> ${JSON.stringify(res)}`
+            `incidenciaSubscripcion -> ${JSON.stringify(respuesta)}`
           );
-          // perform your other action from here
-
         }
       });
 
-    this.verCrearComponent = false;
     this.incidencia = null;
+    this.verCrearComponent = false;
   }
 
   informacionRecibida(incidencia: Incidencia) {
@@ -69,6 +69,6 @@ export class IncidenciaComponent implements OnInit {
     this.incidencia = incidencia;
     this.verCrearComponent = true;
 
-    this.incidenciaCom$.notificaIncidencia(incidencia);
+    this._incidenciaObservable$.gestionaIncidencia(incidencia);
   }
 }

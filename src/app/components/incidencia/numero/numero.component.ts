@@ -22,7 +22,6 @@ import { Incidencia } from './../../../Tipado/Incidencias';
 // ************************************************************************************************
 import { LoggerService } from '../../../services/logger.service';
 import { IncidenciaService } from './../../../services/incidencia.service';
-import { IncidenciaComService } from './../../../services/comunicacion/incidencia-com.service';
 import { IncidenciaObservableService } from './../../../services/incidencia-observable.service';
 
 
@@ -34,9 +33,6 @@ import { IncidenciaObservableService } from './../../../services/incidencia-obse
 export class NumeroComponent implements OnInit, OnDestroy {
   // @Output() enviarInformacionEvent = new EventEmitter();
   incidenciaSubscripcion: Subscription;
-
-  // incidencia: Incidencia;
-  // incidencias: Incidencia[];
 
   incidencia: Incidencia;
   incidencias: Incidencia[];
@@ -66,29 +62,30 @@ export class NumeroComponent implements OnInit, OnDestroy {
       'Iniciamos Componente -> Constructor'
     );
     this.construirFormulario();
-    /*
-    this.incidencia = new Incidencia(
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    );
-    */
   }
 
   ngOnInit(): void {
-    this.logger$.enviarMensajeConsola(
+
+  this.incidencia = {
+      tipo: null,
+      numero: null,
+      fecha: null,
+      codCentro: null,
+      dispositivo: [],
+      descripcion: null,
+      categoria: null,
+      diario: null,
+      resolucion: null,
+      estado: 'NVA'
+    };
+
+  this.logger$.enviarMensajeConsola(
       'numeroComponent',
       'Iniciamos la Subscripcion a Incidencias'
     );
-    this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
-      (respuesta) => {
+
+  this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
+      (respuesta: Incidencia) => {
         if (respuesta) {
           this.logger$.enviarMensajeConsola(
             'numeroComponent',
@@ -98,6 +95,7 @@ export class NumeroComponent implements OnInit, OnDestroy {
         }
       }
     );
+
   }
 
   ngOnDestroy(): void {
@@ -115,67 +113,61 @@ export class NumeroComponent implements OnInit, OnDestroy {
     });
   }
 
-  onEnter() {
+  async onEnter() {
     this.logger$.enviarMensajeConsola(
       'NumeroComponent',
       'Hemos entrado en onEnter'
     );
 
-    this.incidencia = {
-      tipo: this.numeroForm.get('tipo').value,
-      numero: this.numeroForm.get('numero').value,
-      fecha: null,
-      codCentro: null,
-      dispositivo: null,
-      descripcion: null,
-      categoria: null,
-      diario: null,
-      resolucion: null,
-      estado: 'NVA',
-
-    }
-
     this.logger$.enviarMensajeConsola(
       'NumeroComponent',
-      `Valor de incidenciaTemporal.tipo -> ${this.incidencia.tipo}`
+      `Valor de incidencia -> ${JSON.stringify(this.incidencia)}`
     );
 
+    this.incidencia.tipo = this.numeroForm.get('tipo').value;
+    this.incidencia.numero = this.numeroForm.get('numero').value;
+
     if (this.incidencia.numero && this.incidencia.numero > 0) {
+
       this.logger$.enviarMensajeConsola(
         'NumeroComponent',
-        'Vamos a llamar al servicio incidencia$'
+        `Llamamos al servicio incidencia$ : \incidencia\\${this.incidencia.tipo}\\${this.incidencia.numero}`
       );
+
+      const respuesta = await this.localizarIncidencia(this.incidencia);
+
       this.logger$.enviarMensajeConsola(
-        'NumeroComponent',
-        `Cadena a enviar: \incidencia\\${this.incidencia.tipo}\\${this.incidencia.numero}`
+        'numeroComponent',
+        `onEnter() -> Tenemos resultado: ${JSON.stringify(respuesta)}`
       );
 
-      this.incidencia$
-        .buscarIncidencia(this.incidencia)
-        .subscribe((respuesta: any) => {
-          if (respuesta.cuenta === 0) {
-            this._incidenciaObservable$.notificaIncidencia(this.incidencia);
-            this.gestionBotonIncidencia(this.incidencia);
-            return;
-          }
-          if (respuesta.cuenta === 1) {
-            this.incidencia = respuesta.incidencias[0];
-            this._incidenciaObservable$.notificaIncidencia(this.incidencia);
-            this.gestionBotonIncidencia(this.incidencia);
-            return;
-          }
+      if (respuesta && respuesta.length === 0) {
+        this._incidenciaObservable$.gestionaIncidencia(this.incidencia);
+        this.gestionBotonIncidencia(this.incidencia);
+        return;
+      }
 
-          if (respuesta.cuenta > 1) {
-            this.abrirIncidenciasDialog(respuesta.incidencias);
-            return;
-          }
-        });
+      if (respuesta && respuesta.length === 1) {
+        this._incidenciaObservable$.gestionaIncidencia(respuesta[0]);
+        this.gestionBotonIncidencia(this.incidencia);
+        return;
+      }
+
+      if (respuesta && respuesta.length > 1) {
+        this.abrirIncidenciasDialog(respuesta);
+        return;
+      }
     }
   }
 
+  async localizarIncidencia(incidencia: Incidencia) {
+    return await this.incidencia$.buscarIncidencia(incidencia).toPromise();
+  }
+
+
   abrirIncidenciasDialog(incidencias: Incidencia[]) {
     this.logger$.enviarMensajeConsola(
-      'NumeroComponent',
+      'numeroComponent',
       'Estamos en abrirIncidenciasDialog'
     );
 
@@ -194,7 +186,7 @@ export class NumeroComponent implements OnInit, OnDestroy {
       if (datos) {
         this.numeroForm.get('numero').setValue(datos.numero);
         this.gestionBotonIncidencia(datos);
-        this._incidenciaObservable$.notificaIncidencia(datos);
+        this._incidenciaObservable$.gestionaIncidencia(datos);
         return;
       }
     });
@@ -245,6 +237,6 @@ export class NumeroComponent implements OnInit, OnDestroy {
     );
 
     // this.enviarInformacionEvent.emit(incidencia);
-    this._incidenciaObservable$.notificaIncidencia(incidencia);
+    this._incidenciaObservable$.gestionaIncidencia(incidencia);
   }
 }

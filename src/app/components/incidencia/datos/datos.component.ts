@@ -18,21 +18,23 @@ import { BuscarModeloDialogComponent } from './../../comun/buscar-modelo-dialog/
 import { Subscription } from 'rxjs';
 
 // ************************************************************************************************
-// *********************************** Modelos ****************************************************
+// *********************************** Tipado *****************************************************
 // ************************************************************************************************
-import { Incidencia } from './../../../models/incidencia.model';
-import { Modelo } from './../../../models/dispositivo.model';
+
+import { Incidencia } from './../../../Tipado/Incidencias';
+import { Modelo } from './../../../Tipado/dispositivo';
 import { Categorizacion } from './../../../models/incidencia.model';
 
 // ************************************************************************************************
 // *********************************** Servicios **************************************************
 // ************************************************************************************************
-import { LoggerService } from './../../../services/logger.service';
 import { CentroService } from './../../../services/centro.service';
 import { DispositivoService } from './../../../services/dispositivo.service';
 import { IncidenciaService } from './../../../services/incidencia.service';
+import { IncidenciaObservableService } from './../../../services/incidencia-observable.service';
+import { LoggerService } from './../../../services/logger.service';
 import { UsuarioService } from './../../../services/usuario.service';
-import { IncidenciaComService } from './../../../services/comunicacion/incidencia-com.service';
+
 
 // ************************************************************************************************
 // ********************************** Variables Globales ******************************************
@@ -126,7 +128,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     private centro$: CentroService,
     private dispositivo$: DispositivoService,
     private logger$: LoggerService,
-    private incidenciaCom$: IncidenciaComService,
+    private _incidenciaObservable$: IncidenciaObservableService,
     private incidencia$: IncidenciaService,
     private fb: FormBuilder,
     private BuscarCentroDialog: MatDialog,
@@ -140,18 +142,21 @@ export class DatosComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.tabOrder = 30;
+
     this.logger$.enviarMensajeConsola(
       'DatosComponent',
       'Se ha creado DatosComponent'
     );
+
     this.logger$.enviarMensajeConsola(
       'DatosComponent',
       'Iniciamos la Subscripcion a Incidencias'
     );
-    this.incidenciaSubscripcion = this.incidenciaCom$.incidenciaObservable$.subscribe(
-      (incidenciaRes) => {
-        if (incidenciaRes) {
-          this.cargarValores(incidenciaRes);
+
+    this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
+      (respuesta: Incidencia) => {
+        if (respuesta) {
+          this.cargarValores(respuesta);
         }
       }
     );
@@ -214,23 +219,27 @@ export class DatosComponent implements OnInit, OnDestroy {
       'datosComponent',
       `cargarValores -> ${JSON.stringify(incidencia)}`
     );
+
+    this.logger$.enviarMensajeConsola(
+       'datosComponent',
+       `cargarValores -> El valor del array dispositivos es: ${incidencia.dispositivo.length}`
+     );
+
     if (incidencia.estado === 'NVA') {
       this.datosForm.get('fechaAlta').setValue(null);
       this.datosForm.get('codCentro').setValue(null);
-      // this.datosForm.get('equipo').setValue(null);
+      this.dispositivoData = incidencia.dispositivo;
       this.datosForm.get('descripcion').setValue(null);
       return;
     }
     this.datosForm.get('fechaAlta').setValue(incidencia.fecha[0].valor);
-    this.datosForm.get('codCentro').setValue(incidencia.codCentro);
-    // this.datosForm.get('equipo').setValue(incidencia.dispositivo[0].equipo);
-    this.dispositivoData = incidencia.dispositivo;
+    // this.datosForm.get('codCentro').setValue(incidencia.codCentro);
     this.datosForm.get('descripcion').setValue(incidencia.descripcion);
     return;
   }
 
   // ************************************* Funciones codCentro ***********************************
-  onEnterCentro(evento: any) {
+    onEnterCentro(evento: any) {
     this.logger$.enviarMensajeConsola('DatosComponent', 'Estamos en onEnter()');
     if (!evento.target.value.length) {
       this.logger$.enviarMensajeConsola(
@@ -262,7 +271,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     }
   }
 
-  abrirBuscarCentroDialog() {
+    abrirBuscarCentroDialog() {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       'Estamos en abrirBuscarCentroDialog'
@@ -288,7 +297,7 @@ export class DatosComponent implements OnInit, OnDestroy {
   }
 
   // ********************************** Funciones Dispositivo *************************************
-  addDispositivo() {
+    addDispositivo() {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       'Se ha pulsado sobre añadir dispositivo'
@@ -297,7 +306,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     this.abrirDispositivoDialog();
   }
 
-  abrirDispositivoDialog() {
+    abrirDispositivoDialog() {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       'addDispositivo -> Se ha llamado a abrirDispositivoDialog()'
@@ -339,7 +348,7 @@ export class DatosComponent implements OnInit, OnDestroy {
 
 
 
-  onEnterModelo(evento: any) {
+    onEnterModelo(evento: any) {
     this.verIcono.codModelo = false;
 
     this.logger$.enviarMensajeConsola(
@@ -375,7 +384,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     }
   }
 
-  verificaCodModelo(codModelo: string) {
+    verificaCodModelo(codModelo: string) {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       `Estamos en verificaModelo`
@@ -395,7 +404,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     });
   }
 
-  abrirModeloDialog() {
+    abrirModeloDialog() {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       'Estamos en abrirModeloDialog'
@@ -423,7 +432,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     });
   }
 
-  valorPulsadoDispositivo(registro: Registro) {
+    valorPulsadoDispositivo(registro: Registro) {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       `valorPulsadoDispositivo: ${JSON.stringify(registro)}`
@@ -433,7 +442,7 @@ export class DatosComponent implements OnInit, OnDestroy {
 
   // ***************************** Funciones Usuario ***********************************************
 
-  usuarioRecibido(usuarioRecibido: string) {
+    usuarioRecibido(usuarioRecibido: string) {
     this.logger$.enviarMensajeConsola(
       'diarioComponent',
       `usuarioRecibido -> Se ha recibido el usuario ${usuarioRecibido}`
@@ -441,7 +450,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     this.datosForm.get('usuarioCreador').setValue(usuarioRecibido);
   }
 
-  usuarioFin(usuarioRecibido: string) {
+    usuarioFin(usuarioRecibido: string) {
     this.logger$.enviarMensajeConsola(
       'diarioComponent',
       `usuarioFin -> Se ha recibido el usuario ${usuarioRecibido}`
@@ -451,7 +460,7 @@ export class DatosComponent implements OnInit, OnDestroy {
 
   // ***************************** Funciones tipificación ***********************************
 
-  poblarTipificaciones(dispositivo: string) {
+    poblarTipificaciones(dispositivo: string) {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       `cargarTipificaciones -> ${dispositivo} -> cargarTipificaciones()`
@@ -461,7 +470,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     this.cargarTipificaciones('r', dispositivo);
   }
 
-  cargarTipificaciones(tipo: string, dispositivo: string) {
+    cargarTipificaciones(tipo: string, dispositivo: string) {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       `cargarTipificaciones -> campo: ${tipo}, ${dispositivo} -> Llamamos al servicio`
@@ -489,7 +498,7 @@ export class DatosComponent implements OnInit, OnDestroy {
 
   // ********************** Funciones visibilidad y tipado del icono **************************
 
-  visibilidad(tipo: string, valor: boolean) {
+    visibilidad(tipo: string, valor: boolean) {
     if (tipo === 'creador') {
       this.verIcono.usuarioCreador = valor;
       return;
@@ -501,7 +510,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     }
   }
 
-  tipado(tipo: string, valor: boolean) {
+    tipado(tipo: string, valor: boolean) {
     if (tipo === 'creador') {
       this.tipoIcono.usuarioCreador = valor;
       return;

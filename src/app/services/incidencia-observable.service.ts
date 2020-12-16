@@ -25,7 +25,7 @@ export class IncidenciaObservableService {
 
   constructor(private logger$: LoggerService) {}
 
-  public notificaIncidencia(incidencia: Incidencia) {
+  public gestionaIncidencia(incidencia: Incidencia) {
     if (incidencia) {
       this.logger$.enviarMensajeConsola(
         'incidenciaObservableService',
