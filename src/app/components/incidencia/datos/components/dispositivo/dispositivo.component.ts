@@ -1,7 +1,7 @@
 // ************************************************************************************************
 // ********************************** Componentes *************************************************
 // ************************************************************************************************
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import {
   FormGroup,
   FormControl,
@@ -9,7 +9,7 @@ import {
   FormBuilder,
 } from '@angular/forms';
 
-import { MatDialog, MatDialogConfig, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogConfig, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { BuscarModeloDialogComponent } from './../../../../comun/buscar-modelo-dialog/buscar-modelo-dialog.component';
 
 // ************************************************************************************************
@@ -42,6 +42,7 @@ interface Respuesta {
   equipo: string;
   numeroSerie: string;
   modelo: string;
+  posicion?: number;
 }
 
 @Component({
@@ -52,12 +53,13 @@ interface Respuesta {
 export class DispositivoComponent implements OnInit {
   // *********** Formulario *******************************
   dispositivoForm: FormGroup;
-  equipo = new FormControl('', Validators.required);
+  equipo = new FormControl(null, Validators.required);
   numSerie = new FormControl(null);
-  modelo = new FormControl('', Validators.required);
+  modelo = new FormControl(null, Validators.required);
 
   tabOrder: number;
   estiloCelda: string;
+  posicionTemporal: number;
 
   equipoInfo: Info = {
     colorTexto: 'textoRojo',
@@ -74,6 +76,7 @@ export class DispositivoComponent implements OnInit {
   respuesta: Respuesta;
 
   constructor(
+    @Inject(MAT_DIALOG_DATA) public datos,
     private fb: FormBuilder,
     private logger$: LoggerService,
     private dispositivo$: DispositivoService,
@@ -86,6 +89,24 @@ export class DispositivoComponent implements OnInit {
   ngOnInit(): void {
     this.tabOrder = 1;
     this.estiloCelda = CELDAS;
+
+    this.logger$.enviarMensajeConsola(
+      'DispositivoComponent',
+      `ngOnInit() -> Datos Recibidos: ${JSON.stringify(
+        this.datos.dispositivo
+      )}, posicion: ${this.datos.posicion}`
+    );
+
+    if (this.datos.posicion < 0) {
+      this.logger$.enviarMensajeConsola(
+        'DispositivoComponent',
+        'No se cargan valores'
+      );
+      return;
+    }
+    this.verificarEquipo(this.datos.dispositivo.equipo);
+    this.verificarNumSerie(this.datos.dispositivo.numeroSerie);
+    this.verificarModelo(this.datos.dispositivo.modelo);
   }
 
   construirFormulario() {
@@ -98,6 +119,10 @@ export class DispositivoComponent implements OnInit {
   /****************** Equipo ********************************/
   tramitarEquipo(evento: any) {
     const equipo = evento.target.value.toUpperCase();
+    this.verificarEquipo(equipo);
+  }
+
+  verificarEquipo(equipo: string) {
     this.dispositivoForm.get('equipo').setValue(equipo);
 
     if (equipo) {
@@ -134,7 +159,10 @@ export class DispositivoComponent implements OnInit {
   /****************** Número de Serie ********************************/
   tramitarNumSerie(evento: any) {
     const ns = evento.target.value.toUpperCase();
+    this.verificarNumSerie(ns);
+  }
 
+  verificarNumSerie(ns: string) {
     this.logger$.enviarMensajeConsola(
       'DatosComponent -> DispositivoComponent',
       `tramitarnumSerie -> Número de Serie enviado: ${ns}`
@@ -145,12 +173,17 @@ export class DispositivoComponent implements OnInit {
   /****************** Modelo ********************************/
   tramitarModelo(evento: any) {
     const model = evento.target.value.toUpperCase();
+    this.verificarModelo(model);
+  }
 
+  verificarModelo(model: string) {
     if (model) {
       this.logger$.enviarMensajeConsola(
         'DatosComponent -> DispositivoComponent',
-        `tramitarModelo -> Modelo enviado: ${model} -> `
+        `tramitarModelo -> Modelo enviado: ${model} `
       );
+
+      this.dispositivoForm.get('modelo').setValue(model);
 
       // Se ha introducido un código de modelo, por lo que antes de lanzar la consulta verificamos la longitud mínima
       if (model.length > 3) {
@@ -167,6 +200,7 @@ export class DispositivoComponent implements OnInit {
               false,
               `(${respuesta.modelos.categoria}) ${respuesta.modelos.fabricante} ${respuesta.modelos.modelo}`
             );
+
             return;
           }
           this.logger$.enviarMensajeConsola(
@@ -218,6 +252,7 @@ export class DispositivoComponent implements OnInit {
           )}`
         );
         this.dispositivoForm.get('modelo').setValue(modelo.nombre);
+
         this.gestionaToolTip(
           'modelo',
           false,
@@ -252,21 +287,54 @@ export class DispositivoComponent implements OnInit {
     }
   }
 
+  /**************** Gestión de la posición ************************/
+  gestionPosicion(pos: number) {
+    if (this.datos.posicion < 0) {
+      this.logger$.enviarMensajeConsola(
+        'DispositivoComponent',
+        'No incrementamos la posición ya que es un dispositivo nuevo'
+      );
+      return;
+    }
+
+    if (pos - this.datos.posicion === 1) {
+      this.logger$.enviarMensajeConsola(
+        'DispositivoComponent',
+        `Ya se ha incrementado el índice: ${pos}`
+      );
+      return;
+    }
+
+    pos++;
+
+    this.logger$.enviarMensajeConsola(
+      'DispositivoComponent',
+      `Se ha incrementado el índice: ${pos}`
+    );
+
+  }
+
   /************************ Cerrar ********************************/
   cerrar() {
-    this.logger$.enviarMensajeConsola(
-      'DatosComponent -> DispositivoComponent',
-      `cerrar() -> Se va a proceder a añadir un dispositivo al array -> `
-    );
     this.respuesta = {
       equipo: this.dispositivoForm.get('equipo').value,
       numeroSerie: this.dispositivoForm.get('numSerie').value,
       modelo: this.dispositivoForm.get('modelo').value,
+      posicion: -1
     };
+
+    if (!(this.datos.posicion < 0)) {
+      this.logger$.enviarMensajeConsola(
+        'DatosComponent -> DispositivoComponent',
+        `cerrar() -> Posición -> ${this.datos.posicion}`
+      );
+
+      this.respuesta.posicion = this.datos.posicion;
+    }
 
     this.logger$.enviarMensajeConsola(
       'DatosComponent -> DispositivoComponent',
-      `cerrar() -> Datos -> equipo: ${JSON.stringify(this.respuesta)}`
+      `cerrar() -> Datos Enviados -> ${JSON.stringify(this.respuesta)}`
     );
 
     this.dispositivoDialogRef.close(this.respuesta);

@@ -7,7 +7,7 @@ export interface Diario {
   fecha: Date;
   usuario: string;
   nota: string;
-  tareas: string;
+  tarea: string;
 }
 
 export interface Dispositivo {

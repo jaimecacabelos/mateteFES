@@ -10,7 +10,11 @@ import {
 } from '@angular/forms';
 import { MyErrorStateMatcher } from './../../../librerias/MyErrorStateMatcher';
 // import { DateAdapter } from '@angular/material/core';
-import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
+import {
+  MatDialog,
+  MatDialogConfig,
+  MAT_DIALOG_DATA
+} from '@angular/material/dialog';
 import { MatTable } from '@angular/material/table';
 import { BuscarCentroDialogComponent } from './../../comun/buscar-centro-dialog/buscar-centro-dialog.component';
 import { DispositivoComponent } from './components/dispositivo/dispositivo.component';
@@ -34,6 +38,7 @@ import { IncidenciaService } from './../../../services/incidencia.service';
 import { IncidenciaObservableService } from './../../../services/incidencia-observable.service';
 import { LoggerService } from './../../../services/logger.service';
 import { UsuarioService } from './../../../services/usuario.service';
+import { Dispositivo } from '../../../Tipado/Incidencias';
 
 
 // ************************************************************************************************
@@ -48,6 +53,7 @@ import {
   MAX_CODEQP,
   CELDAS,
 } from '../../../config/entorno';
+import { analyzeAndValidateNgModules } from '@angular/compiler';
 
 interface Icono {
   codCentro: boolean;
@@ -63,6 +69,7 @@ interface Registro {
   equipo: string;
   numeroSerie?: string;
   modelo: string;
+  posicion?: number;
 }
 
 @Component({
@@ -110,11 +117,18 @@ export class DatosComponent implements OnInit, OnDestroy {
   tabOrder: number;
   estiloCelda: string;
 
-  mostrarColumnasDispositivo = ['equipo', 'numeroSerie', 'modelo'];
+  mostrarColumnasDispositivo = [
+    'equipo',
+    'numeroSerie',
+    'modelo',
+    'iconoEditar',
+    'iconoBorrar',
+  ];
+
   categoriasInicial: Categorizacion[];
   categoriasFinal: Categorizacion[];
 
-  incidenciaTemporal: Incidencia;
+  incidencia: Incidencia;
 
   tipoIcono: Icono;
   verIcono: Icono;
@@ -156,7 +170,8 @@ export class DatosComponent implements OnInit, OnDestroy {
     this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
       (respuesta: Incidencia) => {
         if (respuesta) {
-          this.cargarValores(respuesta);
+          this.incidencia = respuesta;
+          this.cargarValores(this.incidencia);
         }
       }
     );
@@ -220,11 +235,6 @@ export class DatosComponent implements OnInit, OnDestroy {
       `cargarValores -> ${JSON.stringify(incidencia)}`
     );
 
-    this.logger$.enviarMensajeConsola(
-       'datosComponent',
-       `cargarValores -> El valor del array dispositivos es: ${incidencia.dispositivo.length}`
-     );
-
     if (incidencia.estado === 'NVA') {
       this.datosForm.get('fechaAlta').setValue(null);
       this.datosForm.get('codCentro').setValue(null);
@@ -233,13 +243,14 @@ export class DatosComponent implements OnInit, OnDestroy {
       return;
     }
     this.datosForm.get('fechaAlta').setValue(incidencia.fecha[0].valor);
-    // this.datosForm.get('codCentro').setValue(incidencia.codCentro);
+    this.datosForm.get('codCentro').setValue(incidencia.codCentro);
+    this.dispositivoData = incidencia.dispositivo;
     this.datosForm.get('descripcion').setValue(incidencia.descripcion);
     return;
   }
 
   // ************************************* Funciones codCentro ***********************************
-    onEnterCentro(evento: any) {
+  onEnterCentro(evento: any) {
     this.logger$.enviarMensajeConsola('DatosComponent', 'Estamos en onEnter()');
     if (!evento.target.value.length) {
       this.logger$.enviarMensajeConsola(
@@ -271,7 +282,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     }
   }
 
-    abrirBuscarCentroDialog() {
+  abrirBuscarCentroDialog() {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       'Estamos en abrirBuscarCentroDialog'
@@ -297,24 +308,69 @@ export class DatosComponent implements OnInit, OnDestroy {
   }
 
   // ********************************** Funciones Dispositivo *************************************
-    addDispositivo() {
+
+  valorPulsadoDispositivo(registro: Registro) {
+    this.logger$.enviarMensajeConsola(
+      'datosComponent',
+      `valorPulsadoDispositivo: ${JSON.stringify(registro)}`
+    );
+    return;
+  }
+
+  addDispositivo() {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       'Se ha pulsado sobre añadir dispositivo'
     );
     // Se llama a abrirFormulario para proceder a introducir los datos de los formularios
-    this.abrirDispositivoDialog();
+    this.abrirDispositivoDialog(-1, null);
   }
 
-    abrirDispositivoDialog() {
+  borrarDispositivo(evento: any, registro: Registro) {
+    // Evitamos que el evento se propague, así solo saltará el debido al botón de borrar
+    // y no el de pulsar la fila de la tabla.
+    evento.stopPropagation();
+
     this.logger$.enviarMensajeConsola(
       'datosComponent',
-      'addDispositivo -> Se ha llamado a abrirDispositivoDialog()'
+      `Se ha pulsado sobre borrar dispositivo -> ${JSON.stringify(
+        registro
+      )}, en la posición ${this.dispositivoData.indexOf(registro)}`
+    );
+    this.eliminarDispositivo(registro);
+  }
+
+  editarDispositivo(evento: any, registro: Registro) {
+    // Evitamos que el evento se propague, así solo saltará el debido al botón de borrar
+    // y no el de pulsar la fila de la tabla.
+    evento.stopPropagation();
+
+    this.logger$.enviarMensajeConsola(
+      'datosComponent',
+      `Se ha pulsado sobre editar dispositivo -> ${JSON.stringify(
+        registro
+      )}, en la posición ${this.dispositivoData.indexOf(registro)}`
+    );
+
+    this.abrirDispositivoDialog(
+      this.dispositivoData.indexOf(registro),
+      registro
+    );
+  }
+
+  abrirDispositivoDialog(indice: number, registro?: Registro) {
+    this.logger$.enviarMensajeConsola(
+      'datosComponent',
+      `addDispositivo -> Se ha llamado a abrirDispositivoDialog(indice: ${indice}, registro: ${JSON.stringify(registro)})`
     );
 
     const buscarDispositivoDialogConfig = new MatDialogConfig();
     buscarDispositivoDialogConfig.disableClose = false;
     buscarDispositivoDialogConfig.autoFocus = false;
+    buscarDispositivoDialogConfig.data = {
+        posicion: indice,
+        dispositivo: registro
+    };
 
     const buscarDispositivoDialogRef = this.BuscarDispositivoDialog.open(
       DispositivoComponent,
@@ -325,30 +381,56 @@ export class DatosComponent implements OnInit, OnDestroy {
     buscarDispositivoDialogRef
       .afterClosed()
       .subscribe((dispositivo: Registro) => {
-        if (dispositivo) {
-          // this.datosForm.get('codCentro').setValue(centro);
+        if (dispositivo.modelo) {
           this.logger$.enviarMensajeConsola(
             'datosComponent',
             `abrirDispositivoDialog -> Recibimos respuesta -> ${JSON.stringify(
               dispositivo
             )}`
           );
-          this.dispositivoData.push(dispositivo);
 
-          this.dispositivoTabla.renderRows();
+          if ( dispositivo.posicion < 0) {
+            this.insertarDispositivo(dispositivo);
+            return;
+          }
 
-          this.logger$.enviarMensajeConsola(
-            'datosComponent',
-            `abrirDispositivoDialog() -> incidenciaTemporal ACTUALIZADA -> ${JSON.stringify(this.incidenciaTemporal)}`
-          );
-          return;
+          this.actualizarDispositivo(dispositivo);
+
         }
       });
   }
 
+  actualizarDispositivo(dispositivo: Registro) {
+    this.logger$.enviarMensajeConsola(
+      'datosComponent',
+      `actualizarDispositivo -> Respuesta Recibida -> Modificamos el elemento de la posición ${dispositivo.posicion}`
+    );
 
+    this.dispositivoData[dispositivo.posicion] = dispositivo;
+    this.dispositivoTabla.renderRows();
 
-    onEnterModelo(evento: any) {
+  }
+
+  eliminarDispositivo(dispositivo: Registro) {
+    this.logger$.enviarMensajeConsola(
+      'datosComponent',
+      `eliminarDispositivo -> Eliminamos el dispositivo de la posición ${dispositivo.posicion}`
+    );
+    this.dispositivoData.splice(dispositivo.posicion, 1);
+    this.dispositivoTabla.renderRows();
+  }
+
+  insertarDispositivo(dispositivo: Registro) {
+    this.logger$.enviarMensajeConsola(
+      'datosComponent',
+      'insertarDispositivo -> Respuesta Recibida -> Nuevo elemento del array'
+    );
+
+    this.dispositivoData.push(dispositivo);
+    this.dispositivoTabla.renderRows();
+  }
+
+  onEnterModelo(evento: any) {
     this.verIcono.codModelo = false;
 
     this.logger$.enviarMensajeConsola(
@@ -384,7 +466,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     }
   }
 
-    verificaCodModelo(codModelo: string) {
+  verificaCodModelo(codModelo: string) {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       `Estamos en verificaModelo`
@@ -404,7 +486,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     });
   }
 
-    abrirModeloDialog() {
+  abrirModeloDialog() {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       'Estamos en abrirModeloDialog'
@@ -422,7 +504,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     // Recogemos el valor enviado por el modal
     buscarModeloDialogRef.afterClosed().subscribe((modelo: Modelo) => {
       if (modelo) {
-        this.modeloSeleccionado = modelo;
+        // this.modeloSeleccionado = modelo;
         this.datosForm.get('modelo').setValue(modelo.nombre);
         this.verIcono.modelo = true;
         this.tipoIcono.modelo = true;
@@ -432,17 +514,9 @@ export class DatosComponent implements OnInit, OnDestroy {
     });
   }
 
-    valorPulsadoDispositivo(registro: Registro) {
-    this.logger$.enviarMensajeConsola(
-      'datosComponent',
-      `valorPulsadoDispositivo: ${JSON.stringify(registro)}`
-    );
-    return;
-  }
-
   // ***************************** Funciones Usuario ***********************************************
 
-    usuarioRecibido(usuarioRecibido: string) {
+  usuarioRecibido(usuarioRecibido: string) {
     this.logger$.enviarMensajeConsola(
       'diarioComponent',
       `usuarioRecibido -> Se ha recibido el usuario ${usuarioRecibido}`
@@ -450,7 +524,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     this.datosForm.get('usuarioCreador').setValue(usuarioRecibido);
   }
 
-    usuarioFin(usuarioRecibido: string) {
+  usuarioFin(usuarioRecibido: string) {
     this.logger$.enviarMensajeConsola(
       'diarioComponent',
       `usuarioFin -> Se ha recibido el usuario ${usuarioRecibido}`
@@ -460,7 +534,7 @@ export class DatosComponent implements OnInit, OnDestroy {
 
   // ***************************** Funciones tipificación ***********************************
 
-    poblarTipificaciones(dispositivo: string) {
+  poblarTipificaciones(dispositivo: string) {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       `cargarTipificaciones -> ${dispositivo} -> cargarTipificaciones()`
@@ -470,7 +544,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     this.cargarTipificaciones('r', dispositivo);
   }
 
-    cargarTipificaciones(tipo: string, dispositivo: string) {
+  cargarTipificaciones(tipo: string, dispositivo: string) {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
       `cargarTipificaciones -> campo: ${tipo}, ${dispositivo} -> Llamamos al servicio`
@@ -498,7 +572,7 @@ export class DatosComponent implements OnInit, OnDestroy {
 
   // ********************** Funciones visibilidad y tipado del icono **************************
 
-    visibilidad(tipo: string, valor: boolean) {
+  visibilidad(tipo: string, valor: boolean) {
     if (tipo === 'creador') {
       this.verIcono.usuarioCreador = valor;
       return;
@@ -510,7 +584,7 @@ export class DatosComponent implements OnInit, OnDestroy {
     }
   }
 
-    tipado(tipo: string, valor: boolean) {
+  tipado(tipo: string, valor: boolean) {
     if (tipo === 'creador') {
       this.tipoIcono.usuarioCreador = valor;
       return;

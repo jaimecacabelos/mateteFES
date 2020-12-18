@@ -38,3 +38,8 @@ table {
     -webkit-hyphens: auto;
     hyphens: auto;
 }
+
+.icono-tabla {
+    width: 50px !important;
+    min-width: unset !important;
+}
