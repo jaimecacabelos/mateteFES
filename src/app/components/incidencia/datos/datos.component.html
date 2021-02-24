@@ -23,7 +23,7 @@
                     <div fxLayout="column" fxFlex="90">
                         <mat-form-field [appearance]="estiloCelda">
                             <mat-label>Clave de Centro</mat-label>
-                            <input matInput type="text" (keyup.enter)="onEnterCentro($event)" [formControl]="codCentro" tabindex="tabOrder + 2">
+                            <input matInput type="text" (blur)="onCentro($event)" [formControl]="codCentro" tabindex="tabOrder + 2" [matTooltip]="codCentroTT.texto" matTooltipPosition="above" [matTooltipClass]="codCentroTT.clase">
                         </mat-form-field>
                     </div>
                 </div>
@@ -39,7 +39,6 @@
             </div>
 
         </div>
-
 
         <div fxLayout="row" fxLayoutGap="10px">
 
@@ -84,10 +83,6 @@
 
         </div>
 
-
-
-
-
         <div fxLayout="row" fxLayoutGap="10px">
 
             <div fxlayout="column" fxFlex="100">
@@ -111,32 +106,20 @@
             <div fxLayout="column" fxFlex="30">
                 <div fxLayout="row">
                     <div fxLayout="column" fxFlex="90">
-                        <app-buscar-usuario (enviarUsuarioEvent)="usuarioRecibido($event)"></app-buscar-usuario>
+                        <app-buscar-usuario [usuarioRecibido]='this.incidencia.descripcion.usuario' (enviarUsuarioEvent)="usuarioRecibido(true, $event)"></app-buscar-usuario>
                     </div>
                 </div>
             </div>
 
-            <div fxLayout="column" fxFlex="60">
+            <div fxLayout="column" fxFlex="70">
                 <div fxLayout="row">
-                    <div fxLayout="column" fxFlex="90">
-                        <mat-form-field [appearance]="estiloCelda">
-                            <mat-label>Tipificación Inicial</mat-label>
-                            <mat-select [formControl]="categoriaInicial" tabindex="tabOrder + 10">
-                                <mat-option *ngFor="let categoria of categoriasInicial" [value]="categoria.codigo">
-                                    ({{categoria.codigo}}) {{categoria.nombre}}
-                                </mat-option>
-                            </mat-select>
-                            <mat-error *ngIf="datosForm.get('categoriaInicial').hasError('required')">
-                                Campo Obligatorio
-                            </mat-error>
-                        </mat-form-field>
+                    <div fxLayout="column" fxFlex="85">
+                        <app-tipificacion [tipoRecibido]=true [codigoRecibido]='this.incidencia.categoria[0].valor' [dispositivosRecibidos]='this.dispositivoData'></app-tipificacion>
                     </div>
                 </div>
             </div>
 
-            <div fxlayout="column" fxFlex="10">
-                <!-- Contenedor Vacío -->
-            </div>
+
         </div>
 
         <div fxLayout="row" fxLayoutGap="10px">
@@ -160,8 +143,7 @@
             <div fxLayout="column" fxFlex="30">
                 <div fxLayout="row">
                     <div fxLayout="column" fxFlex="90">
-                        <app-buscar-usuario (enviarUsuarioEvent)="usuarioFin($event)" tabindex="tabOrder + 12"></app-buscar-usuario>
-
+                        <app-buscar-usuario [usuarioRecibido]='this.incidencia.resolucion.usuario' (enviarUsuarioEvent)="usuarioRecibido(false, $event)"></app-buscar-usuario>
                     </div>
                 </div>
             </div>

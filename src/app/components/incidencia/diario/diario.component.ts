@@ -163,7 +163,7 @@ export class DiarioComponent implements OnInit {
       `reseteaFormulario() -> Se va a limpiar el formulario`
     );
 
-    this.buscarUsuario.estableceUsuario();
+    // this.buscarUsuario.estableceUsuario();
     this.diarioForm.reset();
   }
 }

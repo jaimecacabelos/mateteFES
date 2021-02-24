@@ -3,6 +3,11 @@ export interface Categoria {
   valor: string;
 }
 
+export interface Descripcion {
+  usuario: string;
+  texto: string;
+}
+
 export interface Diario {
   fecha: Date;
   usuario: string;
@@ -32,7 +37,7 @@ export interface Incidencia {
   fecha: Fecha[];
   codCentro: string;
   dispositivo: Dispositivo[];
-  descripcion: string;
+  descripcion: Descripcion;
   categoria: Categoria[];
   diario: Diario[];
   resolucion: Resolucion;

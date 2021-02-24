@@ -90,7 +90,8 @@ export class DispositivoComponent implements OnInit {
     this.tabOrder = 1;
     this.estiloCelda = CELDAS;
 
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'DispositivoComponent',
       `ngOnInit() -> Datos Recibidos: ${JSON.stringify(
         this.datos.dispositivo
@@ -98,7 +99,8 @@ export class DispositivoComponent implements OnInit {
     );
 
     if (this.datos.posicion < 0) {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'INFO',
         'DispositivoComponent',
         'No se cargan valores'
       );

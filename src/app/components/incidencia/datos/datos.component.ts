@@ -1,7 +1,7 @@
 // ************************************************************************************************
 // *********************************** Components *************************************************
 // ************************************************************************************************
-import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, OnChanges } from '@angular/core';
 import {
   FormGroup,
   FormControl,
@@ -26,20 +26,16 @@ import { Subscription } from 'rxjs';
 // ************************************************************************************************
 
 import { Incidencia } from './../../../Tipado/Incidencias';
-import { Modelo } from './../../../Tipado/dispositivo';
 import { Categorizacion } from './../../../models/incidencia.model';
+import { Registro, ToolTipInfo } from './../../../Tipado/entorno';
 
 // ************************************************************************************************
 // *********************************** Servicios **************************************************
 // ************************************************************************************************
 import { CentroService } from './../../../services/centro.service';
-import { DispositivoService } from './../../../services/dispositivo.service';
 import { IncidenciaService } from './../../../services/incidencia.service';
 import { IncidenciaObservableService } from './../../../services/incidencia-observable.service';
 import { LoggerService } from './../../../services/logger.service';
-import { UsuarioService } from './../../../services/usuario.service';
-import { Dispositivo } from '../../../Tipado/Incidencias';
-
 
 // ************************************************************************************************
 // ********************************** Variables Globales ******************************************
@@ -53,24 +49,6 @@ import {
   MAX_CODEQP,
   CELDAS,
 } from '../../../config/entorno';
-import { analyzeAndValidateNgModules } from '@angular/compiler';
-
-interface Icono {
-  codCentro: boolean;
-  codModelo: boolean;
-  modelo: boolean;
-  tipoInicial: boolean;
-  tipoFinal: boolean;
-  usuarioCreador: boolean;
-  usuarioCierre: boolean;
-}
-
-interface Registro {
-  equipo: string;
-  numeroSerie?: string;
-  modelo: string;
-  posicion?: number;
-}
 
 @Component({
   selector: 'app-datos',
@@ -95,12 +73,12 @@ export class DatosComponent implements OnInit, OnDestroy {
   numeroSerie = new FormControl('');
   modelo = new FormControl('', Validators.required);
   descripcion = new FormControl('', Validators.required);
-  usuarioCreador = new FormControl('', [
+  usuarioCreador = new FormControl(null, [
     Validators.required,
     Validators.minLength(MIN_CODUSU),
     Validators.maxLength(MAX_CODUSU),
   ]);
-  categoriaInicial = new FormControl('', Validators.required);
+  categoriaInicial = new FormControl(null, Validators.required);
   resolucion = new FormControl('');
   fechaCierre = new FormControl('');
   usuarioCierre = new FormControl('', [
@@ -125,62 +103,69 @@ export class DatosComponent implements OnInit, OnDestroy {
     'iconoBorrar',
   ];
 
-  categoriasInicial: Categorizacion[];
   categoriasFinal: Categorizacion[];
+  dispositivosUnicos: string[];
 
   incidencia: Incidencia;
 
-  tipoIcono: Icono;
-  verIcono: Icono;
-  boton: Icono;
-  modeloSeleccionado: Modelo;
+  // *********** ToolTips *******************************
+  codCentroTT: ToolTipInfo = {
+    colorTexto: 'textoRojo',
+    clase: 'fondoRojo',
+    texto: '',
+  };
 
   // Almacenará los registros asociados a la incidencia
   dispositivoData: Registro[];
 
+// codigoDescripcion: string;
+
   constructor(
     private centro$: CentroService,
-    private dispositivo$: DispositivoService,
     private logger$: LoggerService,
     private _incidenciaObservable$: IncidenciaObservableService,
     private incidencia$: IncidenciaService,
     private fb: FormBuilder,
     private BuscarCentroDialog: MatDialog,
     private BuscarDispositivoDialog: MatDialog,
-    private BuscarModeloDialog: MatDialog,
-    private BuscarUsuarioDialog: MatDialog // private dateAdapter: DateAdapter<Date>
+    // private dateAdapter: DateAdapter<Date>
   ) {
-    this.construirFormulario();
-    // this.dateAdapter.setLocale('es');
-  }
 
-  ngOnInit(): void {
-    this.tabOrder = 30;
-
-    this.logger$.enviarMensajeConsola(
-      'DatosComponent',
-      'Se ha creado DatosComponent'
-    );
-
-    this.logger$.enviarMensajeConsola(
-      'DatosComponent',
-      'Iniciamos la Subscripcion a Incidencias'
+    this.logger$.salidaPantalla(
+      'INFO',
+      'datosComponent',
+      'Iniciamos Componente DATOS -> Constructor'
     );
 
     this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
       (respuesta: Incidencia) => {
         if (respuesta) {
+          this.logger$.salidaPantalla(
+            'INFO',
+            'DatosComponent',
+            `incidenciaSubscripcion -> respuesta: ${JSON.stringify(respuesta)}`
+          );
+
           this.incidencia = respuesta;
           this.cargarValores(this.incidencia);
+          return;
         }
+
+        this.logger$.salidaPantalla(
+          'ERR',
+          'DatosComponent',
+          `incidenciaSubscripcion -> respuesta: ${JSON.stringify(respuesta)}`
+        );
       }
     );
 
-    this.estiloCelda = CELDAS;
+    this.construirFormulario();
+    // this.dateAdapter.setLocale('es');
+  }
 
-    this.incializarVerIcono();
-    this.inicializarTipoIcono();
-    this.modeloSeleccionado = null;
+  ngOnInit(): void {
+    this.estiloCelda = CELDAS;
+    this.tabOrder = 30;
     this.dispositivoData = [];
   }
 
@@ -205,81 +190,100 @@ export class DatosComponent implements OnInit, OnDestroy {
     });
   }
 
-  incializarVerIcono() {
-    this.verIcono = {
-      codCentro: false,
-      codModelo: false,
-      modelo: false,
-      tipoInicial: false,
-      tipoFinal: false,
-      usuarioCreador: false,
-      usuarioCierre: false,
-    };
-  }
-
-  inicializarTipoIcono() {
-    this.tipoIcono = {
-      codCentro: false,
-      codModelo: false,
-      modelo: false,
-      tipoInicial: false,
-      tipoFinal: false,
-      usuarioCreador: false,
-      usuarioCierre: false,
-    };
-  }
-
-  cargarValores(incidencia: Incidencia) {
-    this.logger$.enviarMensajeConsola(
+  cargarValores(incidenciaRecibida: Incidencia) {
+    this.logger$.salidaPantalla(
+      'SEG',
       'datosComponent',
-      `cargarValores -> ${JSON.stringify(incidencia)}`
+      `cargarValores -> ${JSON.stringify(incidenciaRecibida)}`
     );
 
-    if (incidencia.estado === 'NVA') {
-      this.datosForm.get('fechaAlta').setValue(null);
-      this.datosForm.get('codCentro').setValue(null);
-      this.dispositivoData = incidencia.dispositivo;
-      this.datosForm.get('descripcion').setValue(null);
-      return;
-    }
-    this.datosForm.get('fechaAlta').setValue(incidencia.fecha[0].valor);
-    this.datosForm.get('codCentro').setValue(incidencia.codCentro);
-    this.dispositivoData = incidencia.dispositivo;
-    this.datosForm.get('descripcion').setValue(incidencia.descripcion);
+    this.datosForm.get('fechaAlta').setValue(incidenciaRecibida.fecha[0].valor);
+    this.datosForm.get('codCentro').setValue(incidenciaRecibida.codCentro);
+    this.dispositivoData = incidenciaRecibida.dispositivo;
+    this.datosForm.get('usuarioCreador').setValue(incidenciaRecibida.descripcion.usuario);
+    this.datosForm
+        .get('descripcion')
+        .setValue(incidenciaRecibida.descripcion.texto);
+    this.datosForm
+      .get('categoriaInicial')
+      .setValue(incidenciaRecibida.categoria[0].valor);
+    this.datosForm.get('resolucion').setValue(incidenciaRecibida.resolucion.texto);
+    this.datosForm.get('usuarioCierre').setValue(incidenciaRecibida.resolucion.usuario);
+    this.datosForm.get('fechaCierre').setValue(incidenciaRecibida.fecha[1].valor);
+
+    // this.recuperaSoloUnicos(this.dispositivoData);
+
     return;
   }
 
   // ************************************* Funciones codCentro ***********************************
-  onEnterCentro(evento: any) {
-    this.logger$.enviarMensajeConsola('DatosComponent', 'Estamos en onEnter()');
-    if (!evento.target.value.length) {
-      this.logger$.enviarMensajeConsola(
-        'DatosComponent',
-        `Hemos entrado en onEnter con longitud: 0 `
-      );
-      this.abrirBuscarCentroDialog();
-    } else {
-      if (
-        evento.target.value.length < MIN_CODCENTRO ||
-        evento.target.value.length > MAX_CODCENTRO
-      ) {
-        this.logger$.enviarMensajeConsola('DatosComponent', 'Error en tamaño');
-        this.verIcono.codCentro = true;
-        this.tipoIcono.codCentro = false;
-      } else {
-        this.centro$
-          .verificaClave(evento.target.value)
-          .subscribe((respuesta: any) => {
-            this.logger$.enviarMensajeConsola(
-              'DatosComponent',
-              `verificaClave: ${respuesta.Correcto}`
-            );
-            this.verIcono.codCentro = true;
-            this.tipoIcono.codCentro = respuesta.Correcto;
-            return;
-          });
-      }
+  onCentro(evento: any) {
+    // Evitamos que el evento se propague, así solo saltará el debido al botón de borrar
+    // y no el de pulsar la fila de la tabla.
+    evento.stopPropagation();
+
+    this.logger$.salidaPantalla(
+      'SEG',
+      'datosComponent',
+      'Estamos en onCentro()'
+    );
+
+    if (evento.target.value) {
+      evento.target.value = evento.target.value.toUpperCase(); // Pasamos el valor a mayúscula
     }
+
+    if (!evento.target.value.length) {
+      this.logger$.salidaPantalla(
+        'INFO',
+        'datosComponent',
+        'onCentro() -> Longitud 0 -> Llamamos a abrirBuscarCentroDialog()'
+      );
+
+      this.abrirBuscarCentroDialog();
+
+      return;
+    }
+
+    if (
+      evento.target.value.length < MIN_CODCENTRO ||
+      evento.target.value.length > MAX_CODCENTRO
+    ) {
+      this.logger$.salidaPantalla(
+        'ERR',
+        'datosComponent',
+        'onCentro -> Longitud INCORRECTA'
+      );
+      // Aqui tenemos que añadir la lógica para la gestión del tooltip
+      this.gestionaToolTips('codCentro', true, 'Longitud INCORRECTA');
+
+      return;
+    }
+
+    this.centro$
+      .verificaClave(evento.target.value)
+      .subscribe((respuesta: any) => {
+        if (respuesta.centro) {
+          this.logger$.salidaPantalla(
+            'SEG',
+            'datosComponent',
+            `onEnter -> verificaClave(${evento.target.value}) -> Hay centro`
+          );
+          this.gestionaToolTips(
+            'codCentro',
+            false,
+            `${respuesta.centro.centro}`
+          );
+          return;
+        }
+
+        this.logger$.salidaPantalla(
+          'SEG',
+          'datosComponent',
+          `onEnter -> verificaClave(${evento.target.value}) -> NO Hay centro`
+        );
+        this.gestionaToolTips('codCentro', true, 'NO Existe centro');
+        return;
+      });
   }
 
   abrirBuscarCentroDialog() {
@@ -301,8 +305,14 @@ export class DatosComponent implements OnInit, OnDestroy {
     buscarCentroDialogRef.afterClosed().subscribe((centro: string) => {
       if (centro) {
         this.datosForm.get('codCentro').setValue(centro);
-        this.verIcono.codCentro = true;
-        this.tipoIcono.codCentro = true;
+
+        this.logger$.enviarMensajeConsola(
+         'SEG',
+         `datosComponent -> Hemos obtenido centro ->
+          Llamamos a gestionaToolTips(modulo: codCentro, error: false, texto:)`
+        );
+
+        this.gestionaToolTips('codCentro', false, '');
       }
     });
   }
@@ -310,15 +320,18 @@ export class DatosComponent implements OnInit, OnDestroy {
   // ********************************** Funciones Dispositivo *************************************
 
   valorPulsadoDispositivo(registro: Registro) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'datosComponent',
       `valorPulsadoDispositivo: ${JSON.stringify(registro)}`
     );
     return;
   }
 
+
   addDispositivo() {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'datosComponent',
       'Se ha pulsado sobre añadir dispositivo'
     );
@@ -361,15 +374,17 @@ export class DatosComponent implements OnInit, OnDestroy {
   abrirDispositivoDialog(indice: number, registro?: Registro) {
     this.logger$.enviarMensajeConsola(
       'datosComponent',
-      `addDispositivo -> Se ha llamado a abrirDispositivoDialog(indice: ${indice}, registro: ${JSON.stringify(registro)})`
+      `addDispositivo -> Se ha llamado a abrirDispositivoDialog(indice: ${indice}, registro: ${JSON.stringify(
+        registro
+      )})`
     );
 
     const buscarDispositivoDialogConfig = new MatDialogConfig();
     buscarDispositivoDialogConfig.disableClose = false;
     buscarDispositivoDialogConfig.autoFocus = false;
     buscarDispositivoDialogConfig.data = {
-        posicion: indice,
-        dispositivo: registro
+      posicion: indice,
+      dispositivo: registro,
     };
 
     const buscarDispositivoDialogRef = this.BuscarDispositivoDialog.open(
@@ -381,6 +396,14 @@ export class DatosComponent implements OnInit, OnDestroy {
     buscarDispositivoDialogRef
       .afterClosed()
       .subscribe((dispositivo: Registro) => {
+        if (!dispositivo) {
+          this.logger$.salidaPantalla(
+            'INFO',
+            'datosComponent',
+            'abrirDispositivoDialog -> buscarDispositivoDialogRef -> NO SE HA RECIBIDO RESPUESTA'
+          );
+          return;
+        }
         if (dispositivo.modelo) {
           this.logger$.enviarMensajeConsola(
             'datosComponent',
@@ -389,26 +412,25 @@ export class DatosComponent implements OnInit, OnDestroy {
             )}`
           );
 
-          if ( dispositivo.posicion < 0) {
+          if (dispositivo.posicion < 0) {
             this.insertarDispositivo(dispositivo);
             return;
           }
 
           this.actualizarDispositivo(dispositivo);
-
         }
       });
   }
 
   actualizarDispositivo(dispositivo: Registro) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'datosComponent',
-      `actualizarDispositivo -> Respuesta Recibida -> Modificamos el elemento de la posición ${dispositivo.posicion}`
+      `actualizarDispositivo() -> Respuesta Recibida -> Modificamos el elemento de la posición ${dispositivo.posicion}`
     );
 
     this.dispositivoData[dispositivo.posicion] = dispositivo;
     this.dispositivoTabla.renderRows();
-
   }
 
   eliminarDispositivo(dispositivo: Registro) {
@@ -430,101 +452,32 @@ export class DatosComponent implements OnInit, OnDestroy {
     this.dispositivoTabla.renderRows();
   }
 
-  onEnterModelo(evento: any) {
-    this.verIcono.codModelo = false;
-
-    this.logger$.enviarMensajeConsola(
-      'datosComponent',
-      `onEnterModelo -> ${evento.target.value}`
-    );
-
-    if (!evento.target.value.length) {
-      this.logger$.enviarMensajeConsola(
-        'datosComponent',
-        'No tenemos longitud en codModelo -> Abrir diálogo'
-      );
-
-      this.abrirModeloDialog();
-    } else {
-      this.logger$.enviarMensajeConsola(
-        'datosComponent',
-        `Tenemos longitud en codModelo -> Tramitar cadena longitud: ${evento.target.value.length}`
-      );
-
-      if (!(evento.target.value.length > 3)) {
-        this.logger$.enviarMensajeConsola(
-          'datosComponent',
-          'onEnterModelo -> Longitud < 4'
-        );
-      } else {
-        this.logger$.enviarMensajeConsola(
-          'datosComponent',
-          'onEnterModelo -> Longitud > 3, Llamamos a verificarCodModelo'
-        );
-        this.verificaCodModelo(evento.target.value);
-      }
-    }
-  }
-
-  verificaCodModelo(codModelo: string) {
-    this.logger$.enviarMensajeConsola(
-      'datosComponent',
-      `Estamos en verificaModelo`
-    );
-
-    this.dispositivo$.verificaClave(codModelo).subscribe((respuesta: any) => {
-      if (respuesta.modelos) {
-        this.modeloSeleccionado = respuesta.modelos;
-        this.tipoIcono.modelo = respuesta.Correcto;
-        this.verIcono.modelo = true;
-
-        this.poblarTipificaciones(respuesta.modelos.categoria);
-      } else {
-        this.tipoIcono.modelo = respuesta.Correcto;
-        this.verIcono.modelo = true;
-      }
-    });
-  }
-
-  abrirModeloDialog() {
-    this.logger$.enviarMensajeConsola(
-      'datosComponent',
-      'Estamos en abrirModeloDialog'
-    );
-
-    const buscarModeloDialogConfig = new MatDialogConfig();
-    buscarModeloDialogConfig.disableClose = false; // Permite cerrar la ventana con ESC
-    buscarModeloDialogConfig.autoFocus = false;
-
-    const buscarModeloDialogRef = this.BuscarModeloDialog.open(
-      BuscarModeloDialogComponent,
-      buscarModeloDialogConfig
-    );
-
-    // Recogemos el valor enviado por el modal
-    buscarModeloDialogRef.afterClosed().subscribe((modelo: Modelo) => {
-      if (modelo) {
-        // this.modeloSeleccionado = modelo;
-        this.datosForm.get('modelo').setValue(modelo.nombre);
-        this.verIcono.modelo = true;
-        this.tipoIcono.modelo = true;
-
-        this.poblarTipificaciones(modelo.categoria);
-      }
-    });
-  }
-
   // ***************************** Funciones Usuario ***********************************************
 
-  usuarioRecibido(usuarioRecibido: string) {
-    this.logger$.enviarMensajeConsola(
-      'diarioComponent',
-      `usuarioRecibido -> Se ha recibido el usuario ${usuarioRecibido}`
+  usuarioRecibido(creador: boolean, usuarioRecibido: string) {
+
+    if (creador) {
+      this.logger$.salidaPantalla(
+        'INFO',
+        'diarioComponent',
+        `usuarioRecibido -> Se ha recibido el usuario Creador: ${usuarioRecibido}`
+      );
+
+      this.datosForm.get('usuarioCreador').setValue(usuarioRecibido);
+
+      return;
+    }
+
+    this.logger$.salidaPantalla(
+      'INFO',
+      'datosComponent',
+      `usuarioRecibido -> Se ha recibido el usuario Finalizador: ${usuarioRecibido}`
     );
-    this.datosForm.get('usuarioCreador').setValue(usuarioRecibido);
+
+    return;
   }
 
-  usuarioFin(usuarioRecibido: string) {
+usuarioFin(usuarioRecibido: string) {
     this.logger$.enviarMensajeConsola(
       'diarioComponent',
       `usuarioFin -> Se ha recibido el usuario ${usuarioRecibido}`
@@ -532,67 +485,41 @@ export class DatosComponent implements OnInit, OnDestroy {
     this.datosForm.get('usuarioCierre').setValue(usuarioRecibido);
   }
 
-  // ***************************** Funciones tipificación ***********************************
 
-  poblarTipificaciones(dispositivo: string) {
-    this.logger$.enviarMensajeConsola(
+// ********************** Gestión de ToolTips ***********************************************
+
+gestionaToolTips(modulo: string, error: boolean, texto: string) {
+    this.logger$.salidaPantalla(
+      'SEG',
       'datosComponent',
-      `cargarTipificaciones -> ${dispositivo} -> cargarTipificaciones()`
+      'Estamos en gestionaToolTips'
     );
 
-    this.cargarTipificaciones('d', dispositivo);
-    this.cargarTipificaciones('r', dispositivo);
-  }
+    if (modulo === 'codCentro') {
+      this.codCentroTT.texto = texto  || '';
 
-  cargarTipificaciones(tipo: string, dispositivo: string) {
-    this.logger$.enviarMensajeConsola(
-      'datosComponent',
-      `cargarTipificaciones -> campo: ${tipo}, ${dispositivo} -> Llamamos al servicio`
-    );
+      if (error) {
+        this.logger$.salidaPantalla(
+          'INFO',
+          'datosComponent',
+          `gestionaToolTips () -> modulo: ${modulo}, error?: ${error}, texto: ${texto}`
+        );
 
-    this.incidencia$
-      .recuperaCategorizacion(tipo, dispositivo)
-      .subscribe((respuesta: any) => {
-        if (!respuesta) {
-          this.logger$.enviarMensajeConsola(
-            'datosComponent',
-            `No se han recuperado tipificaciones`
-          );
-          return;
-        }
-        if (tipo === 'd') {
-          this.categoriasInicial = respuesta.categorias;
-        }
+        this.codCentroTT.colorTexto = 'textoRojo';
+        this.codCentroTT.clase = 'fondoRojo';
+        return;
+      }
 
-        if (tipo === 'r') {
-          this.categoriasFinal = respuesta.categorias;
-        }
-      });
-  }
+      this.logger$.salidaPantalla(
+        'INFO',
+        'datosComponent',
+        `gestionaToolTips () -> modulo: ${modulo}, error?: ${error}, texto: ${texto}`
+      );
 
-  // ********************** Funciones visibilidad y tipado del icono **************************
+      this.codCentroTT.colorTexto = 'textoNegro';
+      this.codCentroTT.clase = 'fondoLila';
 
-  visibilidad(tipo: string, valor: boolean) {
-    if (tipo === 'creador') {
-      this.verIcono.usuarioCreador = valor;
-      return;
-    }
-
-    if (tipo === 'cierre') {
-      this.verIcono.usuarioCierre = valor;
-      return;
     }
   }
 
-  tipado(tipo: string, valor: boolean) {
-    if (tipo === 'creador') {
-      this.tipoIcono.usuarioCreador = valor;
-      return;
-    }
-
-    if (tipo === 'cierre') {
-      this.tipoIcono.usuarioCierre = valor;
-      return;
-    }
-  }
 }

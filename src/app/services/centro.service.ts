@@ -26,7 +26,7 @@ export class CentroService {
     let url = '';
 
     if (area.length > 0) {
-      this.logger$.enviarMensajeConsola('BuscarCentroDialog', 'Tenemos area');
+      this.logger$.enviarMensajeConsola('centroService', 'Tenemos area');
       url = `${this.ruta}/${tipo}/${area}/${nombre}`;
     } else {
       url = `${this.ruta}/${tipo}/${nombre}`;
@@ -40,12 +40,17 @@ export class CentroService {
   }
 
   verificaClave(codCentro: string) {
-    let url = '';
-    this.logger$.enviarMensajeConsola(
+    // Para verificar la clave no hace falta que nos devuelvan toda la información del centro
+    // const url = `${this.ruta}?codCentro=${codCentro}`;
+
+    const url = `${this.ruta}/cabecera?codCentro=${codCentro}`;
+
+    this.logger$.salidaPantalla(
+      'SEG',
       'centroService',
-      `verificaClave(${codCentro})`
+      `Estamos en verificaClave -> url : ${url}`
     );
-    url = `${this.ruta}/${codCentro}`;
+
     return this.http.get(url);
   }
 }

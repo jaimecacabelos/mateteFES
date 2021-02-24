@@ -1,7 +1,7 @@
 /*************************************************************************************************
 ************************************ Components **************************************************
 **************************************************************************************************/
-import { Component, OnInit, Output, EventEmitter, ViewEncapsulation} from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, ViewEncapsulation, OnChanges, SimpleChanges} from '@angular/core';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { BuscarUsuarioDialogComponent } from './../../comun/buscar-usuario-dialog/buscar-usuario-dialog.component';
 
@@ -12,9 +12,9 @@ import { LoggerService } from './../../../services/logger.service';
 import { UsuarioService } from './../../../services/usuario.service';
 
 /*************************************************************************************************
-************************************** Modelos ***************************************************
+************************************** Tipado ****************************************************
 **************************************************************************************************/
-import { Usuario } from './../../../models/usuario.model';
+import { RespuestaUsuario, Usuario } from './../../../Tipado/usuario';
 
 /*************************************************************************************************
 ******************************** Variables Globales **********************************************
@@ -23,14 +23,14 @@ import {
   CELDAS
 } from '../../../config/entorno';
 
-
 @Component({
   selector: 'app-buscar-usuario',
   templateUrl: './buscar-usuario.component.html',
   styleUrls: ['./buscar-usuario.component.css'],
   encapsulation: ViewEncapsulation.None,
 })
-export class BuscarUsuarioComponent implements OnInit {
+export class BuscarUsuarioComponent implements OnInit, OnChanges {
+  @Input() usuarioRecibido: string;
   @Output() enviarUsuarioEvent = new EventEmitter<string>();
 
   estiloCelda: string;
@@ -55,22 +55,55 @@ export class BuscarUsuarioComponent implements OnInit {
     this.inicializaEntorno();
   }
 
+  ngOnChanges(cambios: SimpleChanges) {
+    this.logger$.salidaPantalla(
+      'INFO',
+      'buscarUsuarioComponente',
+      `onChanges -> Cambios: ${JSON.stringify(cambios)}`
+    );
+
+    if (this.usuarioRecibido) {
+      this.logger$.salidaPantalla(
+        'SEG',
+        'buscarUsuarioComponent',
+        `ngOnChanges -> compruebaUsuario(${this.usuarioRecibido})`
+      );
+
+      this.usuario = this.usuarioRecibido;
+      this.compruebaUsuario(this.usuarioRecibido);
+
+      return;
+    }
+
+    this.logger$.salidaPantalla(
+      'ERR',
+      'buscarUsuarioComponent',
+      'ngOnchanges -> Usuario recibido NO válido'
+    );
+
+  }
+
   inicializaEntorno() {
     this.usuarioToolTip = null; // Sin usuario en el ToolTip
     this.usuarioToolTipClass = 'usuarioErrorTT';
     this.colorTexto = 'textoRojo';
   }
 
-  usuarioPulsado(evento: any) {
+  onUsuario(evento: any) {
+    // Evitamos que el evento se propague.
+    evento.stopPropagation();
+
     const usuarioInput = evento.target.value;
 
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioComponent',
       `Hemos llegado a usuarioPulsado() -> Usuario: ${usuarioInput}`
     );
 
     if (!usuarioInput) {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'SEG',
         'buscarUsuarioComponent',
         'usuarioPulsado() - > La longitud es nula -> Abrimos diálogo'
       );
@@ -79,19 +112,22 @@ export class BuscarUsuarioComponent implements OnInit {
     }
 
     if (usuarioInput) {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'SEG',
         'buscarUsuarioComponent',
         'usuarioPulsado() - > La longitud es NO nula -> Comprobamos longitud'
       );
 
       if (usuarioInput.length === 7 || usuarioInput.length === 8) {
-        this.logger$.enviarMensajeConsola(
+        this.logger$.salidaPantalla(
+          'SEG',
           'buscarUsuarioComponent',
-          'usuarioPulsado() - > Longitud DENTRO de Rango -> Comprobamos usuario'
+          `usuarioPulsado() - > Longitud DENTRO de Rango -> compruebaUsuario(${usuarioInput})`
         );
         this.compruebaUsuario(usuarioInput);
       } else {
-        this.logger$.enviarMensajeConsola(
+        this.logger$.salidaPantalla(
+          'INFO',
           'buscarUsuarioComponent',
           'usuarioPulsado() - > La longitud FUERA de Rango -> Error'
         );
@@ -102,71 +138,89 @@ export class BuscarUsuarioComponent implements OnInit {
   }
 
   compruebaUsuario(usuario: string) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'INFO',
       'buscarUsuarioComponent',
       `Estamos en compruebaUsuario(${usuario})`
     );
-    this.usuario$.obtenerUsuarios(usuario).subscribe((respuesta: any) => {
-      if (!respuesta.usuarios) {
-        this.logger$.enviarMensajeConsola(
+
+    this.usuario$
+      .obtenerUsuarios(usuario)
+      .subscribe((respuesta: RespuestaUsuario) => {
+        if (!respuesta) {
+          this.logger$.salidaPantalla(
+            'ERR',
+            'buscarUsuarioComponent',
+            `compruebaUsuario -> No se ha obtenido respuesta`
+          );
+          return;
+        }
+
+        this.logger$.salidaPantalla(
+          'INFO',
           'buscarUsuarioComponent',
-          `No se ha recuperado usuario`
+          `compruebaUsuario -> Respuesta: ${JSON.stringify(respuesta)}`
         );
-        this.configuraToolTip(true, 'No existe Usuario');
-        return;
-      }
-      if (respuesta.usuarios) {
+
+        if (!respuesta.usuarios) {
+          this.logger$.salidaPantalla(
+            'SEG',
+            'buscarUsuarioComponent',
+            `compruebaUsuario -> No se ha recuperado usuario`
+          );
+
+          this.configuraToolTip(true, 'No existe Usuario');
+
+          return;
+        }
+
+        this.logger$.salidaPantalla(
+          'SEG',
+          'buscarUsuarioComponent',
+          `compruebaUsuario -> Recuperado Usuario -> ${respuesta.usuarios[0].apellidos}, ${respuesta.usuarios[0].nombre}`
+        );
+
         this.configuraToolTip(
           false,
           `${respuesta.usuarios[0].apellidos}, ${respuesta.usuarios[0].nombre}`
         );
         this.envioInformacion(respuesta.usuarios[0].usuario);
+
         return;
-      }
-    });
+      });
   }
 
   configuraToolTip(error: boolean, texto: string) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioComponent',
-      `LLegamos configuraToolTip(Error: ${error}, Texto: ${texto})`
+      `LLegamos a configuraToolTip(Error: ${error}, Texto: ${texto})`
     );
+
     if (error) {
       this.usuarioToolTip = `${texto}`; // Cambiamos el texto del tooltip
       this.usuarioToolTipClass = 'usuarioErrorTT';
       this.colorTexto = 'textoRojo';
-    } else {
-      this.usuarioToolTip = `${texto}`; // Cambiamos el texto del tooltip
-      this.usuarioToolTipClass = 'usuarioTT';
-      this.colorTexto = 'textoNegro';
+
+      return;
     }
+
+    this.usuarioToolTip = `${texto}`; // Cambiamos el texto del tooltip
+    this.usuarioToolTipClass = 'usuarioTT';
+    this.colorTexto = 'textoNegro';
+
     return;
   }
 
-  estableceUsuario(usuario?: string) {
-    if (usuario) {
-      this.logger$.enviarMensajeConsola(
-        'buscarUsuarioComponent',
-        `estableceUsuario -> Se ha recibido usuario: ${usuario}`
-      );
-      this.compruebaUsuario(usuario);
-      return;
-    }
-    this.logger$.enviarMensajeConsola(
-      'buscarUsuarioComponent',
-      'estableceUsuario -> NO se ha recibido usuario -> Se va a resetear el usuario'
-    );
-    this.inicializaEntorno();
-    this.usuario = null;
-  }
   /*************************************************************************************************
    ************************************** Diálogo **************************************************
    *************************************************************************************************/
 
   abrirUsuarioDialog() {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioComponent',
-      'Estamos en abrirModeloDialog'
+      'Estamos en abrirModeloDialog()'
     );
 
     const buscarUsuarioDialogConfig = new MatDialogConfig();
@@ -181,14 +235,21 @@ export class BuscarUsuarioComponent implements OnInit {
 
     // Recogemos el valor enviado por el modal
     buscarUsuarioDialogRef.afterClosed().subscribe((usuario: Usuario) => {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'SEG',
         'buscarUsuarioComponent',
-        `Recueperamos Información del Diálogo -> ${JSON.stringify(usuario)}`
+        `Recuperamos Información del Diálogo -> ${JSON.stringify(usuario)}`
       );
 
-      this.usuario = usuario.usuario;
-      this.configuraToolTip(false, `${usuario.apellidos}, ${usuario.nombre}`);
-      this.envioInformacion(usuario.usuario);
+      if (usuario) {
+        this.usuario = usuario.usuario;
+        this.configuraToolTip(false, `${usuario.apellidos}, ${usuario.nombre}`);
+        this.envioInformacion(usuario.usuario);
+        return;
+      }
+
+      this.usuario = null;
+
     });
   }
 
@@ -196,12 +257,8 @@ export class BuscarUsuarioComponent implements OnInit {
    *************************** Enviamos Usuario al Padre *******************************************
    *************************************************************************************************/
   envioInformacion(usuario: string) {
-    this.logger$.enviarMensajeConsola(
-      'buscarUsuarioComponent',
-      'envioInformacion() -> Ya tenemos usuario'
-    );
-
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioComponent',
       `envioInformacion() -> Vamos a enviar el usuario: ${usuario}`
     );

@@ -42,7 +42,9 @@ export class UsuarioService {
     nombre?: string
   ) {
     const url = `${URL_SERVICIOS}/usuario`;
+
     let params = new HttpParams();
+
     if (codUsuario) {
       params = params.append('codUsuario', codUsuario);
     }
@@ -58,6 +60,11 @@ export class UsuarioService {
     if (nombre) {
       params = params.append('nombre', nombre);
     }
+    this.logger$.salidaPantalla(
+      'INFO',
+      'usuarioService',
+      `obtenerUsuarios () -> url: ${url}, parámetros: ${params}`
+    );
 
     return this.http.get(url, { params });
   }

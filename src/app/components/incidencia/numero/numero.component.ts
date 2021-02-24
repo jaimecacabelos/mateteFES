@@ -57,15 +57,31 @@ export class NumeroComponent implements OnInit, OnDestroy {
     private logger$: LoggerService,
     private incidenciasDialog: MatDialog
   ) {
-    this.logger$.enviarMensajeConsola(
-      'Numero Component',
+    this.logger$.salidaPantalla(
+      'INFO',
+      'numeroComponent',
       'Iniciamos Componente -> Constructor'
     );
+
+    this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
+      (respuesta: Incidencia) => {
+        if (respuesta) {
+          this.logger$.salidaPantalla(
+            'INFO',
+            'numeroComponent',
+            `incidenciaSubscripcion -> ${JSON.stringify(respuesta)}`
+          );
+          // perform your other action from here
+          this.incidencia = respuesta;
+        }
+      }
+    );
+
     this.construirFormulario();
   }
 
   ngOnInit(): void {
-
+/*
   this.incidencia = {
       tipo: null,
       numero: null,
@@ -78,23 +94,12 @@ export class NumeroComponent implements OnInit, OnDestroy {
       resolucion: null,
       estado: 'NVA'
     };
-
-  this.logger$.enviarMensajeConsola(
-      'numeroComponent',
-      'Iniciamos la Subscripcion a Incidencias'
-    );
-
-  this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
-      (respuesta: Incidencia) => {
-        if (respuesta) {
-          this.logger$.enviarMensajeConsola(
-            'numeroComponent',
-            `incidenciaSubscripcion -> ${JSON.stringify(respuesta)}`
-          );
-          // perform your other action from here
-        }
-      }
-    );
+*/
+  this.logger$.salidaPantalla(
+    'INFO',
+    'numeroComponent',
+    `ngOnInit -> Incidencia : ${JSON.stringify(this.incidencia)}`
+  );
 
   }
 
@@ -103,10 +108,12 @@ export class NumeroComponent implements OnInit, OnDestroy {
   }
 
   construirFormulario() {
-    this.logger$.enviarMensajeConsola(
-      'NumeroComponent',
+    this.logger$.salidaPantalla(
+      'SEG',
+      'numeroComponent',
       'construirFormulario()'
     );
+
     this.numeroForm = this.fb.group({
       tipo: this.tipo,
       numero: this.numero,
@@ -114,14 +121,10 @@ export class NumeroComponent implements OnInit, OnDestroy {
   }
 
   async onEnter() {
-    this.logger$.enviarMensajeConsola(
-      'NumeroComponent',
-      'Hemos entrado en onEnter'
-    );
-
-    this.logger$.enviarMensajeConsola(
-      'NumeroComponent',
-      `Valor de incidencia -> ${JSON.stringify(this.incidencia)}`
+    this.logger$.salidaPantalla(
+      'INFO',
+      'numeroComponent',
+      `Llegamos a onEnter()`
     );
 
     this.incidencia.tipo = this.numeroForm.get('tipo').value;
@@ -129,14 +132,16 @@ export class NumeroComponent implements OnInit, OnDestroy {
 
     if (this.incidencia.numero && this.incidencia.numero > 0) {
 
-      this.logger$.enviarMensajeConsola(
-        'NumeroComponent',
-        `Llamamos al servicio incidencia$ : \incidencia\\${this.incidencia.tipo}\\${this.incidencia.numero}`
+      this.logger$.salidaPantalla(
+        'SEG',
+        'numeroComponent',
+        `onEnter -> Llamamos al servicio incidencia$ : \incidencia\\${this.incidencia.tipo}\\${this.incidencia.numero}`
       );
 
       const respuesta = await this.localizarIncidencia(this.incidencia);
 
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'SEG',
         'numeroComponent',
         `onEnter() -> Tenemos resultado: ${JSON.stringify(respuesta)}`
       );
@@ -149,7 +154,7 @@ export class NumeroComponent implements OnInit, OnDestroy {
 
       if (respuesta && respuesta.length === 1) {
         this._incidenciaObservable$.gestionaIncidencia(respuesta[0]);
-        this.gestionBotonIncidencia(this.incidencia);
+        this.gestionBotonIncidencia(respuesta[0]);
         return;
       }
 
@@ -166,7 +171,8 @@ export class NumeroComponent implements OnInit, OnDestroy {
 
 
   abrirIncidenciasDialog(incidencias: Incidencia[]) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'numeroComponent',
       'Estamos en abrirIncidenciasDialog'
     );
@@ -193,9 +199,11 @@ export class NumeroComponent implements OnInit, OnDestroy {
   }
 
   gestionBotonIncidencia(incidencia: Incidencia) {
-    this.logger$.enviarMensajeConsola(
+
+    this.logger$.salidaPantalla(
+      'SEG',
       'Numero Component',
-      `getionBontonIncidencia Número Incidencia: ${incidencia.numero}, estado: ${incidencia.estado}`
+      `getionBontonIncidencia -> Número Incidencia: ${incidencia.numero}, estado: ${incidencia.estado}`
     );
 
     switch (incidencia.estado) {
@@ -227,13 +235,10 @@ export class NumeroComponent implements OnInit, OnDestroy {
   // Vamos a enviar información al componente padre: IncidenciasComponent
 
   envioInformacion(incidencia: Incidencia) {
-    this.logger$.enviarMensajeConsola(
-      'NumeroComponent',
-      'Ya tenemos valor final'
-    );
-    this.logger$.enviarMensajeConsola(
-      'NumeroComponent',
-      `Numero de incidencia final: ${incidencia.numero}, estado de incidencia final: ${incidencia.estado}`
+    this.logger$.salidaPantalla(
+      'SEG',
+      'numeroComponent',
+      `Ya tenemos valor final -> Numero de incidencia final: ${incidencia.numero}, estado de incidencia final: ${incidencia.estado}`
     );
 
     // this.enviarInformacionEvent.emit(incidencia);

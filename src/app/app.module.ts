@@ -26,6 +26,8 @@ import { NumeroComponent } from './components/incidencia/numero/numero.component
 
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { DispositivoComponent } from './components/incidencia/datos/components/dispositivo/dispositivo.component';
+import { TipificacionComponent } from './components/incidencia/datos/components/tipificacion/tipificacion.component';
+import { TipificacionDialogComponent } from './components/incidencia/datos/components/tipificacion/tipificacion-dialog/tipificacion-dialog.component';
 
 @NgModule({
   declarations: [
@@ -41,6 +43,8 @@ import { DispositivoComponent } from './components/incidencia/datos/components/d
     NumeroComponent,
     NumeroComponent,
     DispositivoComponent,
+    TipificacionComponent,
+    TipificacionDialogComponent,
   ],
   imports: [
     AppRoutingModule,

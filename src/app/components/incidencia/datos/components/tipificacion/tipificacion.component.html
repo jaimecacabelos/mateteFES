@@ -1,0 +1,10 @@
+<form [formGroup]="categoriaForm" autocomplete="off">
+
+    <div fxLayout="row">
+        <mat-form-field appearance="standard" class="matFormField100">
+            <mat-label>Tipificación</mat-label>
+            <input matInput type="text" (blur)="textoIntroducido($event)" [formControl]="textoCategoria" [ngClass]="colorTexto" [matTooltip]="categoriaTTTexto" matTooltipPosition="above" [matTooltipClass]="categoriaTTClass">
+        </mat-form-field>
+    </div>
+
+</form>

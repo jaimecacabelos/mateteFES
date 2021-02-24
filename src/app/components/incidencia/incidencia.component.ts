@@ -13,7 +13,6 @@ import { Incidencia } from './../../Tipado/Incidencias';
 // *********************************** Servicios **************************************************
 // ************************************************************************************************
 import { LoggerService } from './../../services/logger.service';
-import { IncidenciaComService } from './../../services/comunicacion/incidencia-com.service';
 import { IncidenciaObservableService } from './../../services/incidencia-observable.service';
 
 @Component({
@@ -34,7 +33,8 @@ export class IncidenciaComponent implements OnInit {
 
   constructor(private logger$: LoggerService,
               private _incidenciaObservable$: IncidenciaObservableService) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'INFO',
       'IncidenciasComponent',
       'Se ha creado el componente incidencias'
     );
@@ -42,33 +42,83 @@ export class IncidenciaComponent implements OnInit {
 
   ngOnInit(): void {
 
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'INFO',
       'IncidenciaComponent',
       'Iniciamos la Subscripcion a Incidencias'
     );
+
     this.incidenciaSubscripcion = this._incidenciaObservable$.incidenciaObservable$.subscribe(
       (respuesta: Incidencia) => {
         if (respuesta) {
-          this.logger$.enviarMensajeConsola(
+          this.logger$.salidaPantalla(
+            'SEG',
             'incidenciaComponent',
             `incidenciaSubscripcion -> ${JSON.stringify(respuesta)}`
           );
         }
       });
 
-    this.incidencia = null;
-    this.verCrearComponent = false;
+    this.incidencia = this.inicializaIncidencia();
+    this.informacionRecibida(this.incidencia);
+    // this.incidencia = null;
+    // this.verCrearComponent = false;
+
+    return;
   }
 
   informacionRecibida(incidencia: Incidencia) {
-    this.logger$.enviarMensajeConsola(
-      'IncidenciasComponent',
-      `Hemos recibido la incidencia: ${incidencia.numero}, con estado: ${incidencia.estado}`
+    this.logger$.salidaPantalla(
+      'SEG',
+      'IncidenciaComponent',
+      `InformacionRecibida: Hemos recibido la incidencia: ${incidencia.numero}, con estado: ${incidencia.estado}`
     );
 
     this.incidencia = incidencia;
     this.verCrearComponent = true;
 
     this._incidenciaObservable$.gestionaIncidencia(incidencia);
+  }
+
+  inicializaIncidencia(): Incidencia {
+
+    const temporal: Incidencia = {
+      tipo: null,
+      numero: null,
+      fecha: [
+        {
+          tipo: 'Alta',
+          valor: null,
+        },
+        {
+          tipo: 'Cierre',
+          valor: null,
+        },
+      ],
+      codCentro: null,
+      dispositivo: null,
+      descripcion: {
+        usuario: null,
+        texto: null,
+      },
+      categoria: [
+        {
+          tipo: 'Inicial',
+          valor: null,
+        },
+        {
+          tipo: 'Final',
+          valor: null,
+        },
+      ],
+      diario: null,
+      resolucion: {
+        usuario: null,
+        texto: null,
+      },
+      estado: null,
+    };
+
+    return temporal;
   }
 }

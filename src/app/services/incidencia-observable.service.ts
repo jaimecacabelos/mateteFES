@@ -27,7 +27,8 @@ export class IncidenciaObservableService {
 
   public gestionaIncidencia(incidencia: Incidencia) {
     if (incidencia) {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'INFO',
         'incidenciaObservableService',
         `Se ha recibido incidencia -> ${JSON.stringify(incidencia)}`
       );

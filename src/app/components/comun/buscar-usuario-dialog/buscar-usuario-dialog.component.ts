@@ -13,7 +13,8 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 // ************************************************************************************************
 // *********************************** Modelos ****************************************************
 // ************************************************************************************************
-import { Usuario } from './../../../models/usuario.model';
+import { Usuario } from './../../../Tipado/usuario';
+
 // ************************************************************************************************
 // *********************************** Servicios **************************************************
 // ************************************************************************************************
@@ -104,7 +105,8 @@ export class BuscarUsuarioDialogComponent implements OnInit {
   }
 
   poblarGrupos(principal: string) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioDialog',
       `poblarGrupos -> ${principal}`
     );
@@ -116,32 +118,39 @@ export class BuscarUsuarioDialogComponent implements OnInit {
 
   // ************** Eventos de los controles **********************************
   apellidosEnter(evento: any) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioDialog',
       `apellidosEnter() -> Apellido: ${evento.target.value}`
     );
+
     this.realizarConsulta();
   }
 
   nombreEnter(evento: any) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioDialog',
       `nombreEnter() -> Nombre: ${evento.target.value}`
     );
+
     this.realizarConsulta();
   }
 
   claveEnter(evento: any) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioDialog',
       `claveEnter() -> Clave: ${evento.target.value}`
     );
+
     this.realizarConsulta();
   }
 
   // ********************* Realizamos la Consulta ****************************
   realizarConsulta() {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioComponent',
       `Estado del formulario -> ${this.buscarUsuarioForm.valid}`
     );
@@ -152,7 +161,8 @@ export class BuscarUsuarioDialogComponent implements OnInit {
       !this.buscarUsuarioForm.get('usuarioApellidos').value &&
       !this.buscarUsuarioForm.get('usuarioNombre').value
     ) {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'SEG',
         'buscarUsuarioDialog',
         'No se puede realiza la consulta ya que no se han enviado datos'
       );
@@ -169,7 +179,8 @@ export class BuscarUsuarioDialogComponent implements OnInit {
         )
         .subscribe((respuesta: any) => {
           if (!respuesta) {
-            this.logger$.enviarMensajeConsola(
+            this.logger$.salidaPantalla(
+              'INFO',
               'buscarUsuarioComponent',
               `Respuesta nula`
             );
@@ -180,7 +191,8 @@ export class BuscarUsuarioDialogComponent implements OnInit {
       return;
     }
 
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioComponent',
       'No se realiza consulta ya que le formulario es INVÁLIDO'
     );
@@ -190,7 +202,8 @@ export class BuscarUsuarioDialogComponent implements OnInit {
     this.errorUsuario = false;
 
     if (!usuarios) {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'INFO',
         'buscarUsuarioDialog',
         'No se han enviado usuarios -> Mensaje sin Usuarios'
       );
@@ -199,7 +212,8 @@ export class BuscarUsuarioDialogComponent implements OnInit {
     }
 
     if (usuarios.length === 1) {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'SEG',
         'buscarUsuarioDialog',
         `Se ha enviado un usuario -> Cargar los datos de los controles del formulario
           -> ${JSON.stringify(usuarios[0])}`
@@ -218,7 +232,8 @@ export class BuscarUsuarioDialogComponent implements OnInit {
     }
 
     if (usuarios.length > 1) {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'SEG',
         'buscarUsuarioDialog',
         `Se han devuelto ${usuarios.length} usuarios -> Cargar la tabla`
       );
@@ -229,7 +244,8 @@ export class BuscarUsuarioDialogComponent implements OnInit {
 
   // ***************** Recuperamos la información de la fila de la tabla ********************************
   valorPulsado(usuarioPulsado: Usuario) {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'INFO',
       'buscarUsuarioDialog',
       `Usuario Devuelto -> ${usuarioPulsado}`
     );
@@ -240,22 +256,27 @@ export class BuscarUsuarioDialogComponent implements OnInit {
   // ********************* Enviamos el usuario seleccionado *********************************************
   finalizar() {
     if (this.usuarioSeleccionado) {
-      this.logger$.enviarMensajeConsola(
+      this.logger$.salidaPantalla(
+        'SEG',
         'buscarUsuarioDialog',
         'Se ha pulsado ACEPTAR -> Cerramos modal y enviamos usuario'
       );
+
       this.buscarUsuarioDialogRef.close(this.usuarioSeleccionado);
+
       return;
     }
 
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'INFO',
       'buscarUsuarioDialog',
       'Se ha pulsado ACEPTAR -> NO cerramos modal ya que no tenemos usuario'
     );
   }
 
   nueva() {
-    this.logger$.enviarMensajeConsola(
+    this.logger$.salidaPantalla(
+      'SEG',
       'buscarUsuarioDialog',
       'Se ha pulsado NUEVA -> Se va a resetear el formulario'
     );

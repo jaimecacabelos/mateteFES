@@ -110,3 +110,13 @@ tr.seleccionado:hover {
 .textoNegro {
     color: #000000;
 }
+
+.toolTipCorrecto {
+    color: white;
+    background-color: #4a148c;
+}
+
+.toolTipError {
+    color: white;
+    background-color: #d50000;
+}

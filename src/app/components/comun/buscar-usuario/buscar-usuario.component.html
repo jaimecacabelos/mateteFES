@@ -3,7 +3,7 @@
         <div fxLayout="column" fxFlex="100">
             <mat-form-field [appearance]="estiloCelda">
                 <mat-label>Usuario</mat-label>
-                <input matInput type="text" (focusout)="usuarioPulsado($event)" [ngClass]="colorTexto" [ngModel]="usuario" [matTooltip]="usuarioToolTip" matTooltipPosition="above" [matTooltipClass]="usuarioToolTipClass" tabindex="tabOrder + 2">
+                <input matInput type="text" (blur)="onUsuario($event)" [ngClass]="colorTexto" [ngModel]="usuario" [matTooltip]="usuarioToolTip" matTooltipPosition="above" [matTooltipClass]="usuarioToolTipClass" tabindex="tabOrder + 2">
             </mat-form-field>
         </div>
     </div>
